@@ -1,10 +1,9 @@
-        function clearCanvas() {
-            <!DOCTYPE html>
+      <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diagramas de Flujo Colaborativos</title>
+    <title>Flowchart Colaborativo</title>
     <style>
         * {
             margin: 0;
@@ -13,623 +12,225 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f7fa;
-            color: #2c3e50;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         .header {
-            background: #2c3e50;
-            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
             padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .user-role {
-            padding: 0.25rem 0.75rem;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            background: #e74c3c;
-        }
-
-        .main-container {
-            display: grid;
-            grid-template-columns: 300px 1fr 400px;
-            height: calc(100vh - 80px);
-            gap: 0;
-        }
-
-        .left-sidebar {
-            background: white;
-            border-right: 1px solid #e0e6ed;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .tabs {
-            display: flex;
-            background: #f8f9fa;
-            border-bottom: 1px solid #e0e6ed;
-        }
-
-        .tab {
-            flex: 1;
-            padding: 0.75rem 0.5rem;
-            background: #f8f9fa;
-            border: none;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 0.8rem;
-            transition: all 0.3s ease;
-        }
-
-        .tab.active {
-            background: white;
-            color: #3498db;
-            border-bottom: 2px solid #3498db;
-        }
-
-        .tab-content {
-            flex: 1;
-            padding: 1rem;
-            overflow-y: auto;
-        }
-
-        .tab-panel {
-            display: none;
-        }
-
-        .tab-panel.active {
-            display: block;
-        }
-
-        .shapes-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.75rem;
-        }
-
-        .shape-item {
-            padding: 0.75rem;
-            border: 2px solid #3498db;
-            border-radius: 8px;
+        .header h1 {
+            color: white;
             text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: white;
-            font-size: 0.8rem;
-            user-select: none;
+            font-size: 2rem;
+            font-weight: 300;
         }
 
-        .shape-item:hover {
-            background: #3498db;
-            color: white;
-            transform: scale(1.05);
-        }
-
-        .shape-item:active {
-            transform: scale(0.95);
-        }
-
-        .shape-icon {
-            width: 40px;
-            height: 40px;
-            margin: 0 auto 0.5rem;
-            border: 2px solid currentColor;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            font-weight: bold;
-            position: relative;
-            background: currentColor;
-            color: white;
-        }
-
-        .shape-icon.start-end {
-            border-radius: 50%;
-        }
-
-        .shape-icon.process {
-            border-radius: 4px;
-        }
-
-        .shape-icon.decision {
-            transform: rotate(45deg);
-            border-radius: 4px;
-        }
-
-        .shape-icon.decision span {
-            transform: rotate(-45deg);
-        }
-
-        .shape-icon.document {
-            border-radius: 4px 4px 0 0;
-            position: relative;
-        }
-
-        .shape-icon.document::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: -2px;
-            right: -2px;
-            height: 8px;
-            background: currentColor;
-            border-radius: 0 0 8px 8px;
-        }
-
-        .shape-icon.data {
-            border-radius: 0 8px 0 8px;
-        }
-
-        .shape-icon.connect {
-            border-radius: 4px;
-            border: none;
-            background: linear-gradient(90deg, currentColor 0%, currentColor 40%, transparent 40%, transparent 60%, currentColor 60%, currentColor 100%);
-            position: relative;
-        }
-
-        .shape-icon.connect::after {
-            content: '▶';
-            position: absolute;
-            right: -8px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 12px;
-        }
-
-        .instructions {
-            margin-top: 1rem;
-            padding: 0.75rem;
-            background: #e3f2fd;
-            border-radius: 6px;
-            border-left: 4px solid #3498db;
-            font-size: 0.8rem;
-        }
-
-        .instructions-title {
-            font-weight: 600;
-            color: #1565c0;
-            margin-bottom: 0.5rem;
-        }
-
-        .instructions-text {
-            color: #1976d2;
-            line-height: 1.4;
-        }
-
-        .resize-handle {
-            background: #3498db;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: n-resize;
-            color: white;
-            font-weight: bold;
-            font-size: 0.8rem;
-            border-top: 2px solid #2980b9;
-            border-bottom: 2px solid #2980b9;
-            user-select: none;
-        }
-
-        .resize-handle:hover {
-            background: #e74c3c;
-            border-color: #c0392b;
-        }
-
-        .moderator-panel {
-            background: #f8f9fa;
-            padding: 1rem;
-            height: 200px;
-            overflow-y: auto;
-            border-top: 1px solid #e0e6ed;
-        }
-
-        .moderator-title {
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: #e74c3c;
-            font-size: 0.9rem;
-        }
-
-        .moderator-btn {
-            width: 100%;
-            margin-bottom: 0.5rem;
-            padding: 0.5rem;
-            border: none;
-            border-radius: 6px;
-            background: #3498db;
-            color: white;
-            cursor: pointer;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-
-        .moderator-btn:hover {
-            background: #2980b9;
-        }
-
-        .content-area {
-            background: white;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .process-header {
-            padding: 1.5rem 2rem;
-            border-bottom: 1px solid #e0e6ed;
-        }
-
-        .process-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #2c3e50;
-            margin-bottom: 0.5rem;
-        }
-
-        .process-version {
-            color: #f39c12;
-            font-weight: 600;
-        }
-
-        .canvas-controls {
+        .toolbar {
+            background: rgba(255, 255, 255, 0.05);
             padding: 1rem 2rem;
-            background: #f8f9fa;
-            border-bottom: 1px solid #e0e6ed;
             display: flex;
             gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
             padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
-            font-weight: 500;
+            transition: all 0.3s ease;
             font-size: 0.9rem;
         }
 
-        .btn-primary { background: #3498db; color: white; }
-        .btn-warning { background: #f39c12; color: white; }
-        .btn-success { background: #27ae60; color: white; }
-        .btn-danger { background: #e74c3c; color: white; }
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn.primary {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            border: none;
+        }
+
+        .btn.danger {
+            background: linear-gradient(45deg, #f44336, #da190b);
+            border: none;
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: rgba(255, 255, 255, 0.05);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .sidebar h3 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .node-palette {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .palette-item {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.75rem;
+            border-radius: 6px;
+            cursor: grab;
+            text-align: center;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .palette-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.02);
+        }
+
+        .palette-item:active {
+            cursor: grabbing;
+        }
+
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
 
         .canvas {
-            flex: 1;
-            background: white;
-            position: relative;
-            overflow: auto;
-            border: 2px dashed #ddd;
-            margin: 1rem;
-            border-radius: 8px;
-        }
-
-        .canvas-content {
-            position: relative;
-            transform-origin: top left;
-            transition: transform 0.3s ease;
-            min-width: 100%;
-            min-height: 100%;
-        }
-
-        .canvas-grid {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                linear-gradient(to right, #f0f0f0 1px, transparent 1px),
-                linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20px 20px, rgba(255,255,255,0.1) 1px, transparent 1px);
             background-size: 20px 20px;
+            position: relative;
+            cursor: move;
         }
 
-        .flowchart-element {
+        .flowchart-node {
             position: absolute;
             min-width: 120px;
-            min-height: 70px;
-            border: 3px solid #27ae60;
-            border-radius: 50px;
-            background: #e8f5e8;
+            min-height: 60px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: move;
+            user-select: none;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: move;
-            font-weight: 600;
             text-align: center;
-            padding: 0.75rem;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.15);
-            user-select: none;
-            font-size: 0.9rem;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            font-weight: 500;
+            color: #333;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
         }
 
-        .flowchart-element:hover {
-            transform: scale(1.02);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-        }
-
-        .flowchart-element:active {
+        .flowchart-node:hover {
             transform: scale(1.05);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
         }
 
-        .flowchart-element.process {
+        .flowchart-node.selected {
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.3);
+        }
+
+        .flowchart-node.process {
             border-radius: 8px;
-            background: #e3f2fd;
-            border-color: #3498db;
         }
 
-        .flowchart-element.decision {
+        .flowchart-node.decision {
+            border-radius: 50%;
             min-width: 80px;
             min-height: 80px;
-            border-radius: 8px;
-            background: #fff3cd;
-            border-color: #f39c12;
-            transform: rotate(45deg);
-            padding: 0.5rem;
-            font-size: 0.7rem;
-            position: relative;
         }
 
-        .flowchart-element.decision span {
-            transform: rotate(-45deg);
-            display: block;
-            text-align: center;
-            line-height: 1.1;
-            max-width: 60px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .decision-connection-point {
-            position: absolute;
-            width: 16px;
-            height: 16px;
-            background: #f39c12;
-            border: 2px solid white;
-            border-radius: 50%;
-            cursor: pointer;
-            z-index: 20;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 9px;
+        .flowchart-node.start-end {
+            border-radius: 30px;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
             color: white;
-            font-weight: bold;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .decision-connection-point:hover {
-            background: #e67e22;
-            transform: scale(1.3);
-            z-index: 25;
-        }
-
-        .decision-connection-point.top {
-            top: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .decision-connection-point.right {
-            right: -12px;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-        .decision-connection-point.bottom {
-            bottom: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .decision-connection-point.left {
-            left: -12px;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-        .decision-connection-point.top:hover {
-            transform: translateX(-50%) scale(1.3);
-        }
-
-        .decision-connection-point.right:hover {
-            transform: translateY(-50%) scale(1.3);
-        }
-
-        .decision-connection-point.bottom:hover {
-            transform: translateX(-50%) scale(1.3);
-        }
-
-        .decision-connection-point.left:hover {
-            transform: translateY(-50%) scale(1.3);
-        }
-
-        /* Etiquetas de conexión */
-        .connection-label {
-            position: absolute;
-            background: rgba(243, 156, 18, 0.9);
-            color: white;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 10px;
-            font-weight: bold;
-            z-index: 30;
-            white-space: nowrap;
-            pointer-events: none;
-        }
-
-        /* POST-ITS */
-        .post-it {
-            position: absolute;
-            width: 150px;
-            min-height: 100px;
-            background: #ffeb3b;
-            border: 1px solid #fbc02d;
-            border-radius: 0 0 5px 5px;
-            padding: 0.5rem;
-            font-size: 0.8rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            cursor: move;
-            z-index: 50;
-            font-family: 'Comic Sans MS', cursive, sans-serif;
-            transform: rotate(-2deg);
-        }
-
-        .post-it::before {
-            content: '';
-            position: absolute;
-            top: -1px;
-            left: -1px;
-            right: -1px;
-            height: 20px;
-            background: #f9a825;
-            border-radius: 2px 2px 0 0;
-        }
-
-        .post-it-content {
-            margin-top: 15px;
-            outline: none;
-            border: none;
-            background: transparent;
-            width: 100%;
-            min-height: 60px;
-            resize: none;
-            font-family: inherit;
-            font-size: inherit;
-        }
-
-        .post-it-controls {
-            position: absolute;
-            top: 2px;
-            right: 5px;
-            display: flex;
-            gap: 3px;
-        }
-
-        .post-it-btn {
-            width: 15px;
-            height: 15px;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .post-it-delete {
-            background: #f44336;
-            color: white;
-        }
-
-        .post-it.blue {
-            background: #2196f3;
-            border-color: #1976d2;
-        }
-
-        .post-it.blue::before {
-            background: #1976d2;
-        }
-
-        .post-it.green {
-            background: #4caf50;
-            border-color: #388e3c;
-        }
-
-        .post-it.green::before {
-            background: #388e3c;
-        }
-
-        .post-it.pink {
-            background: #e91e63;
-            border-color: #c2185b;
-        }
-
-        .post-it.pink::before {
-            background: #c2185b;
-        }
-
-        .flowchart-element.document {
-            border-radius: 8px 8px 0 0;
-            background: #f8f9fa;
-            border-color: #6c757d;
-        }
-
-        .flowchart-element.data {
-            border-radius: 0 15px 0 15px;
-            background: #fde2e4;
-            border-color: #e74c3c;
+            border-color: #45a049;
         }
 
         .connection-line {
             position: absolute;
-            background: #3498db;
-            height: 3px;
+            height: 2px;
+            background: #667eea;
             transform-origin: left center;
-            z-index: 10;
             pointer-events: none;
+            z-index: 1;
         }
 
-        .connection-arrow {
+        .connection-point {
             position: absolute;
-            width: 0;
-            height: 0;
-            border-left: 8px solid #3498db;
-            border-top: 6px solid transparent;
-            border-bottom: 6px solid transparent;
-            z-index: 11;
-            pointer-events: none;
+            width: 10px;
+            height: 10px;
+            background: #667eea;
+            border-radius: 50%;
+            cursor: crosshair;
+            z-index: 10;
         }
 
-        .connection-mode .flowchart-element {
-            border-width: 4px !important;
-        }
-
-        .connection-mode .flowchart-element:hover {
-            border-color: #e74c3c !important;
-            box-shadow: 0 0 15px rgba(231, 76, 60, 0.5) !important;
-        }
-
-        .connection-mode .flowchart-element.selected-for-connection {
-            border-color: #27ae60 !important;
-            box-shadow: 0 0 20px rgba(39, 174, 96, 0.7) !important;
-        }
-
-        .connection-mode-indicator {
+        .users-online {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(231, 76, 60, 0.9);
-            color: white;
-            padding: 1rem 2rem;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
             border-radius: 8px;
-            font-weight: bold;
-            z-index: 2000;
-            display: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            min-width: 200px;
         }
 
-        .connection-mode-indicator.show {
-            display: block;
+        .user-cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            pointer-events: none;
+            z-index: 1000;
+            transition: all 0.1s ease;
+        }
+
+        .status-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .modal {
@@ -637,1629 +238,593 @@
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
             align-items: center;
             justify-content: center;
-        }
-
-        .modal.show {
-            display: flex;
         }
 
         .modal-content {
             background: white;
             padding: 2rem;
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            max-width: 500px;
+            max-width: 400px;
             width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            margin-bottom: 1.5rem;
             text-align: center;
         }
 
-        .modal-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 0.5rem;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: #2c3e50;
-            font-size: 0.9rem;
-        }
-
-        .form-control {
+        .modal input {
             width: 100%;
             padding: 0.75rem;
-            border: 2px solid #e0e6ed;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            transition: border-color 0.3s ease;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-        }
-
-        .color-selector {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.75rem;
-            margin-top: 0.5rem;
-        }
-
-        .color-option {
-            padding: 0.75rem;
-            border: 2px solid #e0e6ed;
-            border-radius: 8px;
-            cursor: pointer;
-            text-align: center;
-            font-size: 0.85rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .color-option:hover {
-            border-color: #3498db;
-            transform: translateY(-2px);
-        }
-
-        .color-option.selected {
-            border-color: #3498db;
-            background: #e3f2fd;
-            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
-        }
-
-        .color-dot {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .modal-footer {
-            display: flex;
-            gap: 1rem;
-            justify-content: flex-end;
-            margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid #e0e6ed;
-        }
-
-        .btn-modal {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary-modal {
-            background: #3498db;
-            color: white;
-        }
-
-        .btn-primary-modal:hover {
-            background: #2980b9;
-        }
-
-        .btn-secondary-modal {
-            background: #95a5a6;
-            color: white;
-        }
-
-        .btn-secondary-modal:hover {
-            background: #7f8c8d;
-        }
-
-        .right-sidebar {
-            background: white;
-            border-left: 2px solid #3498db;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .chat-header {
-            background: #3498db;
-            color: white;
-            padding: 1rem;
-            font-weight: 600;
-        }
-
-        .chat-messages {
-            flex: 1;
-            padding: 1rem;
-            overflow-y: auto;
-            background: #f8f9fa;
-        }
-
-        .message {
-            margin-bottom: 1rem;
-            padding: 0.75rem;
-            border-radius: 8px;
-            background: white;
-            border-left: 4px solid #3498db;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .message-author {
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-            font-size: 0.9rem;
-        }
-
-        .message-content {
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }
-
-        .message-time {
-            font-size: 0.75rem;
-            color: #7f8c8d;
-            margin-top: 0.25rem;
-        }
-
-        .chat-input {
-            padding: 1rem;
-            border-top: 1px solid #e0e6ed;
-            display: flex;
-            gap: 0.5rem;
-            background: white;
-        }
-
-        .chat-input input {
-            flex: 1;
-            padding: 0.5rem;
-            border: 1px solid #e0e6ed;
+            margin: 1rem 0;
+            border: 1px solid #ddd;
             border-radius: 6px;
-            font-size: 0.9rem;
+            font-size: 1rem;
         }
 
-        .concept-item {
-            background: white;
-            border: 1px solid #e0e6ed;
-            border-radius: 8px;
-            padding: 0.75rem;
-            margin-bottom: 0.75rem;
-            cursor: pointer;
-        }
-
-        .concept-item:hover {
-            border-color: #3498db;
-        }
-
-        .concept-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-        }
-
-        .concept-status {
-            padding: 0.25rem 0.5rem;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-
-        .concept-status.pending { background: #fff3cd; color: #856404; }
-        .concept-status.official { background: #d1e7dd; color: #0f5132; }
-        .concept-status.voting { background: #cff4fc; color: #055160; }
-
-        .participants-list {
-            list-style: none;
-        }
-
-        .participant {
-            padding: 0.5rem;
-            margin-bottom: 0.5rem;
-            background: #f8f9fa;
-            border-radius: 6px;
-            border-left: 4px solid;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.85rem;
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+            
+            .toolbar {
+                padding: 0.5rem 1rem;
+            }
+            
+            .btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Header -->
     <div class="header">
-        <div class="logo">📊 Diagramas de Flujo Colaborativos</div>
-        <div class="user-info">
-            <span id="userName">Juan Pérez</span>
-            <span id="userRole" class="user-role">Moderador</span>
+        <h1>🔄 Flowchart Colaborativo</h1>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <button class="btn primary" onclick="saveFlowchart()">💾 Guardar</button>
+        <button class="btn" onclick="loadFlowchart()">📂 Cargar</button>
+        <button class="btn" onclick="exportFlowchart()">📤 Exportar</button>
+        <button class="btn" onclick="clearCanvas()">🗑️ Limpiar</button>
+        <button class="btn" onclick="toggleGrid()">📊 Grid</button>
+        <button class="btn danger" onclick="deleteSelected()">❌ Eliminar</button>
+        <div style="margin-left: auto;">
+            <button class="btn" onclick="zoomIn()">🔍+</button>
+            <button class="btn" onclick="zoomOut()">🔍-</button>
+            <button class="btn" onclick="resetZoom()">↩️ Reset</button>
         </div>
     </div>
 
+    <!-- Main Container -->
     <div class="main-container">
-        <div class="left-sidebar">
-            <div class="tabs">
-                <button class="tab active" onclick="showTab('shapes')">📝 Formas</button>
-                <button class="tab" onclick="showTab('concepts')">📚 Conceptos</button>
-                <button class="tab" onclick="showTab('participants')">👥 Usuarios</button>
-            </div>
-            
-            <div class="tab-content">
-                <div id="shapes-tab" class="tab-panel active">
-                    <div class="shapes-grid">
-                        <div class="shape-item" onclick="openConfigModal('start-end')">
-                            <div class="shape-icon start-end"><span>●</span></div>
-                            <div>Inicio/Fin</div>
-                        </div>
-                        <div class="shape-item" onclick="openConfigModal('process')">
-                            <div class="shape-icon process"><span>□</span></div>
-                            <div>Proceso</div>
-                        </div>
-                        <div class="shape-item" onclick="openConfigModal('decision')">
-                            <div class="shape-icon decision"><span>?</span></div>
-                            <div>Decisión</div>
-                        </div>
-                        <div class="shape-item" onclick="openConfigModal('document')">
-                            <div class="shape-icon document"><span>📄</span></div>
-                            <div>Documento</div>
-                        </div>
-                        <div class="shape-item" onclick="toggleConnectionMode()">
-                            <div class="shape-icon connect"><span>→</span></div>
-                            <div>Conectar</div>
-                        </div>
-                        <div class="shape-item" onclick="createPostIt()">
-                            <div class="shape-icon" style="background: #ffeb3b; color: #333;"><span>📝</span></div>
-                            <div>Post-it</div>
-                        </div>
-                    </div>
-                    
-                    <div class="instructions">
-                        <div class="instructions-title">📦 Instrucciones:</div>
-                        <div class="instructions-text">
-                            1. Haz clic en cualquier elemento de arriba<br>
-                            2. Se abrirá ventana de configuración<br>
-                            3. Configura título, responsable y descripción<br>
-                            4. El elemento aparecerá en el canvas<br>
-                            5. Usa "Conectar" para unir elementos
-                        </div>
-                    </div>
+        <!-- Sidebar with Node Palette -->
+        <div class="sidebar">
+            <h3>📦 Elementos</h3>
+            <div class="node-palette">
+                <div class="palette-item" draggable="true" data-node-type="start-end">
+                    🏁 Inicio/Fin
                 </div>
-                
-                <div id="concepts-tab" class="tab-panel">
-                    <h3 style="margin-bottom: 1rem; font-size: 1rem;">📚 Gestión de Conceptos</h3>
-                    
-                    <div class="concept-item" onclick="openConceptModal('servicio')">
-                        <div class="concept-header">
-                            <span>🔧 Servicio</span>
-                            <span class="concept-status pending">Pendiente</span>
-                        </div>
-                        <div style="font-size: 0.8rem; color: #7f8c8d;">3 definiciones • 0 votos</div>
-                    </div>
-                    
-                    <div class="concept-item" onclick="openConceptModal('diagnostico')">
-                        <div class="concept-header">
-                            <span>🔍 Diagnóstico</span>
-                            <span class="concept-status official">Oficial</span>
-                        </div>
-                        <div style="font-size: 0.8rem; color: #7f8c8d;">2 definiciones • Votado</div>
-                    </div>
-                    
-                    <div class="concept-item" onclick="openConceptModal('calidad')">
-                        <div class="concept-header">
-                            <span>⭐ Calidad</span>
-                            <span class="concept-status voting">En Votación</span>
-                        </div>
-                        <div style="font-size: 0.8rem; color: #7f8c8d;">4 definiciones • 12 votos</div>
-                    </div>
+                <div class="palette-item" draggable="true" data-node-type="process">
+                    ⚙️ Proceso
                 </div>
-                
-                <div id="participants-tab" class="tab-panel">
-                    <h3 style="margin-bottom: 1rem; font-size: 1rem;">👥 Participantes</h3>
-                    <ul class="participants-list">
-                        <li class="participant" style="border-left-color: #e74c3c;">
-                            <div>
-                                <div style="font-weight: 500;">Juan Pérez</div>
-                                <div style="font-size: 0.75rem; color: #7f8c8d;">Moderador</div>
-                            </div>
-                            <div style="color: #e74c3c;">●</div>
-                        </li>
-                        <li class="participant" style="border-left-color: #3498db;">
-                            <div>
-                                <div style="font-weight: 500;">María García</div>
-                                <div style="font-size: 0.75rem; color: #7f8c8d;">Participante</div>
-                            </div>
-                            <div style="color: #3498db;">●</div>
-                        </li>
-                        <li class="participant" style="border-left-color: #27ae60;">
-                            <div>
-                                <div style="font-weight: 500;">Carlos López</div>
-                                <div style="font-size: 0.75rem; color: #7f8c8d;">Participante</div>
-                            </div>
-                            <div style="color: #27ae60;">●</div>
-                        </li>
-                    </ul>
+                <div class="palette-item" draggable="true" data-node-type="decision">
+                    ❓ Decisión
+                </div>
+                <div class="palette-item" draggable="true" data-node-type="input-output">
+                    📥 Entrada/Salida
                 </div>
             </div>
-            
-            <div class="resize-handle" id="resizeHandle">
-                ⬆️ ARRASTRA PARA REDIMENSIONAR ⬆️
-            </div>
-            
-            <div class="moderator-panel" id="moderatorPanel">
-                <div class="moderator-title">🔧 Panel de Moderador</div>
-                <button class="moderator-btn" onclick="saveData()">🎨 Gestionar Colores</button>
-                <button class="moderator-btn" onclick="showMessage('Función de preguntas')">❓ Agregar Pregunta</button>
-                <button class="moderator-btn" onclick="showMessage('Función de unir procesos')">🔗 Unir Procesos</button>
-                <button class="moderator-btn" onclick="showMessage('Función de versiones')">📋 Ver Versiones</button>
+
+            <h3 style="margin-top: 2rem;">🎨 Herramientas</h3>
+            <div class="node-palette">
+                <div class="palette-item" onclick="toggleConnectionMode()">
+                    🔗 Conectar Nodos
+                </div>
+                <div class="palette-item" onclick="toggleTextMode()">
+                    ✏️ Editar Texto
+                </div>
             </div>
         </div>
 
-        <div class="content-area">
-            <div class="process-header">
-                <h1 class="process-title">Proceso de Facturación</h1>
-                <div class="process-version">📝 Borrador v1.0</div>
-            </div>
-
-            <div class="canvas-controls">
-                <button class="btn btn-primary" onclick="saveData()">💾 Guardar</button>
-                <button class="btn btn-warning" onclick="startVoting()">🗳️ Iniciar Votación</button>
-                <button class="btn btn-success" onclick="finishSession()">✅ Finalizar</button>
-                <button class="btn btn-danger" onclick="clearCanvas()">🗑️ Limpiar</button>
-                <div style="margin-left: auto; display: flex; gap: 0.5rem; align-items: center;">
-                    <button class="btn btn-primary" onclick="zoomOut()">🔍-</button>
-                    <span id="zoomLevel" style="font-weight: bold; min-width: 60px; text-align: center;">100%</span>
-                    <button class="btn btn-primary" onclick="zoomIn()">🔍+</button>
-                    <button class="btn btn-primary" onclick="resetZoom()">↺</button>
-                </div>
-            </div>
-
+        <!-- Canvas -->
+        <div class="canvas-container">
             <div class="canvas" id="canvas">
-                <div class="canvas-content" id="canvasContent">
-                    <div class="canvas-grid"></div>
-                    <div class="flowchart-element start-end" style="top: 100px; left: 100px;" id="start-1">
-                        <span>INICIO</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="right-sidebar">
-            <div class="chat-header">💬 Chat Colaborativo</div>
-            <div class="chat-messages" id="chatMessages">
-                <div class="message" style="border-left-color: #e74c3c;">
-                    <div class="message-author">Juan Pérez (Moderador)</div>
-                    <div class="message-content">¡Bienvenidos! Sistema listo para usar.</div>
-                    <div class="message-time">10:30 AM</div>
-                </div>
-                <div class="message" style="border-left-color: #95a5a6;">
-                    <div class="message-author">Sistema</div>
-                    <div class="message-content">✅ Haz clic en elementos del sidebar para configurarlos</div>
-                    <div class="message-time">10:31 AM</div>
-                </div>
-            </div>
-            <div class="chat-input">
-                <input type="text" id="chatInput" placeholder="Escribe un mensaje..." onkeypress="handleChatKeypress(event)">
-                <button class="btn btn-primary" onclick="sendMessage()">Enviar</button>
+                <!-- Los nodos del flowchart se agregarán aquí dinámicamente -->
             </div>
         </div>
     </div>
 
-    <div id="configModal" class="modal">
+    <!-- Users Online Panel -->
+    <div class="users-online">
+        <h4>👥 Usuarios Conectados</h4>
+        <div id="usersList">
+            <div>🟢 Usuario Principal</div>
+        </div>
+    </div>
+
+    <!-- Status Indicator -->
+    <div class="status-indicator" id="statusIndicator">
+        🔴 Desconectado
+    </div>
+
+    <!-- Modal for Text Editing -->
+    <div class="modal" id="textModal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title" id="modalTitle">Configurar Elemento</h3>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">📝 Título del Elemento</label>
-                <input type="text" id="elementTitle" class="form-control" placeholder="Ej: Validar datos del cliente">
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">👥 Responsable (Selecciona uno)</label>
-                <div class="color-selector" id="colorSelector">
-                    <div class="color-option" onclick="selectColor('#8B4513', 'Área Administrativa')">
-                        <div class="color-dot" style="background: #8B4513;"></div>
-                        <span>Área Administrativa</span>
-                    </div>
-                    <div class="color-option" onclick="selectColor('#3498db', 'Área Técnica')">
-                        <div class="color-dot" style="background: #3498db;"></div>
-                        <span>Área Técnica</span>
-                    </div>
-                    <div class="color-option" onclick="selectColor('#f1c40f', 'Área Logística')">
-                        <div class="color-dot" style="background: #f1c40f;"></div>
-                        <span>Área Logística</span>
-                    </div>
-                    <div class="color-option" onclick="selectColor('#9b59b6', 'Dirección')">
-                        <div class="color-dot" style="background: #9b59b6;"></div>
-                        <span>Dirección</span>
-                    </div>
-                    <div class="color-option" onclick="selectColor('#27ae60', 'Cliente')">
-                        <div class="color-dot" style="background: #27ae60;"></div>
-                        <span>Cliente</span>
-                    </div>
-                    <div class="color-option" onclick="selectColor('#95a5a6', 'Proveedor')">
-                        <div class="color-dot" style="background: #95a5a6;"></div>
-                        <span>Proveedor</span>
-                    </div>
-                    <div class="color-option" onclick="selectColor('#ffffff', 'Cualquier Persona')">
-                        <div class="color-dot" style="background: #ffffff; border: 1px solid #ddd;"></div>
-                        <span>Cualquier Persona</span>
-                    </div>
-                    <div class="color-option" onclick="selectColor('#e91e63', 'Externo Caso Especial')">
-                        <div class="color-dot" style="background: #e91e63;"></div>
-                        <span>Externo Caso Especial</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">📄 Descripción (Opcional)</label>
-                <textarea id="elementDescription" class="form-control" rows="3" placeholder="Agrega detalles o instrucciones..."></textarea>
-            </div>
-            
-            <div id="decisionFields" class="form-group" style="display: none;">
-                <label class="form-label">🔀 Opciones de Decisión</label>
-                <div id="decisionOptions">
-                    <div class="decision-option-row" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
-                        <input type="text" class="form-control decision-option" placeholder="Ej: Sí, Aprobado, Válido..." style="flex: 1;" value="Sí">
-                        <button type="button" class="btn btn-danger" onclick="removeDecisionOption(this)" style="padding: 0.5rem;">❌</button>
-                    </div>
-                    <div class="decision-option-row" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
-                        <input type="text" class="form-control decision-option" placeholder="Ej: No, Rechazado, Inválido..." style="flex: 1;" value="No">
-                        <button type="button" class="btn btn-danger" onclick="removeDecisionOption(this)" style="padding: 0.5rem;">❌</button>
-                    </div>
-                </div>
-                <button type="button" class="btn btn-primary" onclick="addDecisionOption()" style="width: 100%; margin-top: 0.5rem;">➕ Agregar Opción</button>
-            </div>
-            
-            <div class="modal-footer">
-                <button class="btn-modal btn-secondary-modal" onclick="closeModal()">❌ Cancelar</button>
-                <button class="btn-modal btn-primary-modal" onclick="saveElement()">✅ Guardar</button>
+            <h3>✏️ Editar Texto</h3>
+            <input type="text" id="nodeTextInput" placeholder="Ingresa el texto del nodo">
+            <div style="margin-top: 1rem;">
+                <button class="btn primary" onclick="saveNodeText()">✅ Guardar</button>
+                <button class="btn" onclick="closeTextModal()">❌ Cancelar</button>
             </div>
         </div>
     </div>
 
-    <div id="connectionModeIndicator" class="connection-mode-indicator">
-        🔗 MODO CONEXIÓN: Haz click en dos elementos para conectarlos (ESC para cancelar)
-    </div>
-
-    <script>
-        console.log('🚀 Aplicación iniciada');
+    <!-- Firebase Configuration -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
         
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBIahyAh_hQkRLQ1hN2LVA2erMW2cjjDJs",
+            authDomain: "flowchart-colaborativo-hdm.firebaseapp.com",
+            projectId: "flowchart-colaborativo-hdm",
+            storageBucket: "flowchart-colaborativo-hdm.firebasestorage.app",
+            messagingSenderId: "105428041029",
+            appId: "1:105428041029:web:1d889fd5ddb41f646dd22c"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
         // Variables globales
-        let elementCounter = 1;
-        let selectedElementColor = '#f1c40f';
-        let selectedEntityName = 'Área Logística';
-        let currentElementType = '';
-        let editingElementId = null;
-        let connectionMode = false;
-        let selectedForConnection = null;
-        let connections = [];
-        let zoomLevel = 1;
+        window.db = db;
+        window.auth = auth;
+        window.currentUser = null;
+        window.flowchartData = {
+            nodes: [],
+            connections: []
+        };
 
-        // FUNCIONES BÁSICAS
-        function showTab(tabName) {
-            console.log('📱 Cambiando a tab:', tabName);
-            
-            const panels = document.querySelectorAll('.tab-panel');
-            panels.forEach(panel => panel.classList.remove('active'));
-            
-            const tabButtons = document.querySelectorAll('.tab');
-            tabButtons.forEach(tab => tab.classList.remove('active'));
-            
-            document.getElementById(tabName + '-tab').classList.add('active');
-            event.target.classList.add('active');
-            
-            addChatMessage(`📱 Cambiado a: ${getTabName(tabName)}`, 'Sistema');
-        }
+        // Autenticación anónima
+        signInAnonymously(auth).then(() => {
+            document.getElementById('statusIndicator').innerHTML = '🟢 Conectado';
+            console.log('Usuario autenticado correctamente');
+        }).catch((error) => {
+            console.error('Error de autenticación:', error);
+            document.getElementById('statusIndicator').innerHTML = '🔴 Error de conexión';
+        });
 
-        function getTabName(tabName) {
-            const names = {
-                'shapes': 'Formas',
-                'concepts': 'Conceptos', 
-                'participants': 'Participantes'
-            };
-            return names[tabName] || tabName;
-        }
-
-        function openConfigModal(elementType) {
-            console.log('⚙️ Abriendo modal para:', elementType);
-            currentElementType = elementType;
-            editingElementId = null;
-            
-            const modal = document.getElementById('configModal');
-            const modalTitle = document.getElementById('modalTitle');
-            const decisionFields = document.getElementById('decisionFields');
-            
-            modalTitle.textContent = `Configurar ${getElementName(elementType)}`;
-            
-            document.getElementById('elementTitle').value = getDefaultTitle(elementType);
-            document.getElementById('elementDescription').value = '';
-            
-            if (elementType === 'decision') {
-                decisionFields.style.display = 'block';
-                setDecisionOptions(['Sí', 'No']);
-            } else {
-                decisionFields.style.display = 'none';
+        // Listener de autenticación
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.currentUser = user;
+                initializeFlowchart();
             }
-            
-            const colorOptions = document.querySelectorAll('.color-option');
-            colorOptions.forEach(option => option.classList.remove('selected'));
-            
-            selectedElementColor = '#f1c40f';
-            selectedEntityName = 'Área Logística';
-            const defaultOption = document.querySelector('.color-option:nth-child(3)');
-            if (defaultOption) {
-                defaultOption.classList.add('selected');
-            }
-            
-            modal.classList.add('show');
-            addChatMessage(`⚙️ Configurando ${getElementName(elementType)}`, 'Sistema');
-        }
+        });
 
-        function editElement(elementId) {
-            console.log('✏️ Editando elemento:', elementId);
-            editingElementId = elementId;
-            
-            const element = document.getElementById(elementId);
-            if (!element) return;
-            
-            const title = element.querySelector('span').textContent.split('\n')[0];
-            const modal = document.getElementById('configModal');
-            const modalTitle = document.getElementById('modalTitle');
-            const decisionFields = document.getElementById('decisionFields');
-            
-            modalTitle.textContent = `Editar Elemento`;
-            
-            document.getElementById('elementTitle').value = title;
-            document.getElementById('elementDescription').value = element.dataset.description || '';
-            
-            const elementType = element.className.split(' ')[1];
-            
-            if (elementType === 'decision') {
-                decisionFields.style.display = 'block';
-                const existingOptions = element.dataset.decisionOptions ? 
-                    JSON.parse(element.dataset.decisionOptions) : ['Sí', 'No'];
-                setDecisionOptions(existingOptions);
-            } else {
-                decisionFields.style.display = 'none';
-            }
-            
-            modal.classList.add('show');
-            addChatMessage(`✏️ Editando: ${title}`, 'Sistema');
-        }
-
-        function selectColor(color, entityName) {
-            selectedElementColor = color;
-            selectedEntityName = entityName;
-            
-            const colorOptions = document.querySelectorAll('.color-option');
-            colorOptions.forEach(option => option.classList.remove('selected'));
-            
-            if (event) {
-                const clickedOption = event.target.closest('.color-option');
-                if (clickedOption) {
-                    clickedOption.classList.add('selected');
+        // Inicializar el flowchart
+        function initializeFlowchart() {
+            // Escuchar cambios en tiempo real
+            const flowchartRef = doc(db, 'flowcharts', 'main');
+            onSnapshot(flowchartRef, (doc) => {
+                if (doc.exists()) {
+                    const data = doc.data();
+                    if (data.nodes) {
+                        window.flowchartData = data;
+                        renderFlowchart();
+                    }
                 }
-            }
-            
-            addChatMessage(`🎨 Responsable: ${entityName}`, 'Sistema');
+            });
         }
 
-        function saveElement() {
-            const title = document.getElementById('elementTitle').value.trim();
-            const description = document.getElementById('elementDescription').value.trim();
+        // Exponer funciones al scope global
+        window.initializeFlowchart = initializeFlowchart;
+    </script>
+
+    <!-- Application JavaScript -->
+    <script>
+        // Variables globales para la aplicación
+        let selectedNode = null;
+        let connectionMode = false;
+        let connectionStart = null;
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0 };
+        let zoomLevel = 1;
+        let nodeCounter = 0;
+
+        // Funciones globales para event handling
+        function handleDragStart(e) {
+            e.dataTransfer.setData('text/plain', e.target.dataset.nodeType);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const nodeType = e.dataTransfer.getData('text/plain');
+            const rect = e.target.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / zoomLevel;
+            const y = (e.clientY - rect.top) / zoomLevel;
             
-            if (!title) {
-                alert('❌ Por favor ingresa un título');
+            createNode(nodeType, x, y);
+        }
+
+        function handleMouseDown(e) {
+            // Esta función se maneja en handleNodeMouseDown para nodos específicos
+        }
+
+        function handleMouseMove(e) {
+            if (isDragging && selectedNode) {
+                const canvas = document.getElementById('canvas');
+                const rect = canvas.getBoundingClientRect();
+                
+                const newX = (e.clientX - rect.left - dragOffset.x) / zoomLevel;
+                const newY = (e.clientY - rect.top - dragOffset.y) / zoomLevel;
+
+                selectedNode.x = Math.max(0, newX);
+                selectedNode.y = Math.max(0, newY);
+
+                saveToFirebase();
+                renderFlowchart();
+            }
+        }
+
+        function handleMouseUp() {
+            isDragging = false;
+            selectedNode = null;
+        }
+
+        function handleCanvasClick(e) {
+            if (e.target.id === 'canvas') {
+                // Deseleccionar todos los nodos
+                document.querySelectorAll('.flowchart-node').forEach(n => n.classList.remove('selected'));
+                selectedNode = null;
+            }
+        }
+
+        function handleNodeMouseDown(e, node) {
+            e.stopPropagation();
+            
+            if (connectionMode) {
+                if (!connectionStart) {
+                    connectionStart = node;
+                    document.getElementById('statusIndicator').innerHTML = '🔗 Selecciona el nodo destino';
+                } else if (connectionStart.id !== node.id) {
+                    createConnection(connectionStart, node);
+                    connectionStart = null;
+                    document.getElementById('statusIndicator').innerHTML = '✅ Conexión creada';
+                    setTimeout(() => {
+                        document.getElementById('statusIndicator').innerHTML = '🟢 Conectado';
+                    }, 2000);
+                }
                 return;
             }
+
+            selectedNode = node;
+            isDragging = true;
             
-            if (editingElementId) {
-                updateElement(editingElementId, title, description);
-            } else {
-                createElement(currentElementType, title, description);
-            }
-            
-            closeModal();
+            const rect = e.target.getBoundingClientRect();
+            dragOffset.x = e.clientX - rect.left;
+            dragOffset.y = e.clientY - rect.top;
+
+            // Marcar nodo como seleccionado
+            document.querySelectorAll('.flowchart-node').forEach(n => n.classList.remove('selected'));
+            e.target.classList.add('selected');
         }
 
-        function createElement(elementType, title, description) {
-            elementCounter++;
-            const canvasContent = document.getElementById('canvasContent');
-            const element = document.createElement('div');
-            const elementId = `${elementType}-${elementCounter}`;
-            
-            element.className = `flowchart-element ${elementType}`;
-            element.id = elementId;
-            element.style.position = 'absolute';
-            element.style.left = `${50 + Math.random() * 300}px`;
-            element.style.top = `${50 + Math.random() * 200}px`;
-            element.style.borderColor = selectedElementColor;
-            element.dataset.description = description;
-            
-            if (elementType === 'decision') {
-                const options = getDecisionOptions();
-                element.dataset.decisionOptions = JSON.stringify(options);
-                
-                element.innerHTML = `<span>${title}</span>`;
-                element.title = `Opciones: ${options.join(', ')}`;
-                
-                // Crear puntos de conexión para cada opción
-                createDecisionConnectionPoints(element, options);
-            } else {
-                element.innerHTML = `<span>${title}</span>`;
-            }
-            
-            applyElementStyles(element, selectedElementColor);
-            makeElementDraggable(element);
-            element.ondblclick = () => editElement(elementId);
-            
-            canvasContent.appendChild(element);
-            addChatMessage(`✅ "${title}" creado (${selectedEntityName})`, 'Sistema');
-            
-            if (elementType === 'decision') {
-                const options = getDecisionOptions();
-                addChatMessage(`🔀 Opciones: ${options.join(', ')}`, 'Sistema');
-            }
-        }
+        // Inicialización cuando se carga la página
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeEventListeners();
+        });
 
-        function createDecisionConnectionPoints(element, options) {
-            const positions = ['top', 'right', 'bottom', 'left'];
+        function initializeEventListeners() {
+            const canvas = document.getElementById('canvas');
             
-            options.forEach((option, index) => {
-                if (index < 4) { // Máximo 4 opciones
-                    const point = document.createElement('div');
-                    point.className = `decision-connection-point ${positions[index]}`;
-                    point.dataset.option = option;
-                    point.dataset.optionIndex = index;
-                    point.title = option;
-                    
-                    // Mostrar las primeras 1-2 letras de la opción
-                    point.textContent = option.substring(0, 2).toUpperCase();
-                    
-                    // Evento para conexiones específicas
-                    point.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        if (connectionMode) {
-                            handleDecisionPointClick(element, point, option);
-                        }
-                    });
-                    
-                    element.appendChild(point);
-                }
+            // Event listeners para drag & drop desde la paleta
+            const paletteItems = document.querySelectorAll('.palette-item[draggable="true"]');
+            paletteItems.forEach(item => {
+                item.addEventListener('dragstart', handleDragStart);
             });
+
+            canvas.addEventListener('dragover', handleDragOver);
+            canvas.addEventListener('drop', handleDrop);
+
+            // Event listeners para el canvas
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('mouseup', handleMouseUp);
+            canvas.addEventListener('click', handleCanvasClick);
         }
 
-        function updateElement(elementId, title, description) {
-            const element = document.getElementById(elementId);
-            if (!element) return;
-            
-            const elementType = element.className.split(' ')[1];
-            
-            if (elementType === 'decision') {
-                const options = getDecisionOptions();
-                element.dataset.decisionOptions = JSON.stringify(options);
-                
-                // Limpiar puntos de conexión existentes
-                const existingPoints = element.querySelectorAll('.decision-connection-point');
-                existingPoints.forEach(point => point.remove());
-                
-                element.querySelector('span').textContent = title;
-                element.title = `Opciones: ${options.join(', ')}`;
-                
-                // Recrear puntos de conexión
-                createDecisionConnectionPoints(element, options);
-                
-                addChatMessage(`🔀 Opciones actualizadas: ${options.join(', ')}`, 'Sistema');
-            } else {
-                element.querySelector('span').textContent = title;
-            }
-            
-            element.style.borderColor = selectedElementColor;
-            element.dataset.description = description;
-            applyElementStyles(element, selectedElementColor);
-            addChatMessage(`✏️ "${title}" actualizado`, 'Sistema');
-        }
-
-        function applyElementStyles(element, color) {
-            const lightColors = {
-                '#8B4513': '#f4e4bc',   // Café claro para Área Administrativa
-                '#3498db': '#e3f2fd',   // Azul claro para Área Técnica
-                '#f1c40f': '#fef9e7',   // Amarillo claro para Área Logística
-                '#9b59b6': '#f3e5f5',   // Lila claro para Dirección
-                '#27ae60': '#e8f5e8',   // Verde claro para Cliente
-                '#95a5a6': '#f8f9fa',   // Gris claro para Proveedor
-                '#ffffff': '#ffffff',   // Blanco para Cualquier Persona
-                '#e91e63': '#fce4ec'    // Rosa claro para Externo Caso Especial
+        function createNode(type, x, y) {
+            const node = {
+                id: 'node_' + (++nodeCounter),
+                type: type,
+                x: x,
+                y: y,
+                text: getDefaultText(type),
+                width: 120,
+                height: 60
             };
-            
-            if (lightColors[color]) {
-                element.style.backgroundColor = lightColors[color];
-            }
-            
-            // Manejo especial para el color blanco (necesita borde más visible)
-            if (color === '#ffffff') {
-                element.style.border = '3px solid #95a5a6';
-            }
+
+            window.flowchartData.nodes.push(node);
+            saveToFirebase();
+            renderFlowchart();
         }
 
-        function closeModal() {
-            document.getElementById('configModal').classList.remove('show');
-            currentElementType = '';
-            editingElementId = null;
-        }
-
-        function getElementName(elementType) {
-            const names = {
-                'start-end': 'Inicio/Fin',
-                'process': 'Proceso', 
-                'decision': 'Decisión',
-                'document': 'Documento',
-                'data': 'Datos'
-            };
-            return names[elementType] || elementType;
-        }
-
-        function getDefaultTitle(elementType) {
-            const titles = {
-                'start-end': 'INICIO/FIN',
-                'process': 'NUEVO PROCESO',
-                'decision': '¿DECISIÓN?',
-                'document': 'DOCUMENTO',
-                'data': 'DATOS'
-            };
-            return titles[elementType] || 'ELEMENTO';
-        }
-
-        // FUNCIONES DE DECISIÓN
-        function addDecisionOption() {
-            const container = document.getElementById('decisionOptions');
-            const newRow = document.createElement('div');
-            newRow.className = 'decision-option-row';
-            newRow.style.cssText = 'display: flex; gap: 0.5rem; margin-bottom: 0.5rem;';
-            
-            newRow.innerHTML = `
-                <input type="text" class="form-control decision-option" placeholder="Nueva opción..." style="flex: 1;">
-                <button type="button" class="btn btn-danger" onclick="removeDecisionOption(this)" style="padding: 0.5rem;">❌</button>
-            `;
-            
-            container.appendChild(newRow);
-        }
-
-        function removeDecisionOption(button) {
-            const row = button.parentElement;
-            const container = document.getElementById('decisionOptions');
-            
-            if (container.children.length > 2) {
-                row.remove();
-            } else {
-                alert('Una decisión debe tener al menos 2 opciones');
+        function getDefaultText(type) {
+            switch(type) {
+                case 'start-end': return 'Inicio';
+                case 'process': return 'Proceso';
+                case 'decision': return '¿Decisión?';
+                case 'input-output': return 'Entrada/Salida';
+                default: return 'Nodo';
             }
         }
 
-        function getDecisionOptions() {
-            const inputs = document.querySelectorAll('.decision-option');
-            const options = [];
-            
-            inputs.forEach(input => {
-                const value = input.value.trim();
-                if (value) {
-                    options.push(value);
-                }
+        function renderFlowchart() {
+            const canvas = document.getElementById('canvas');
+            canvas.innerHTML = '';
+
+            // Renderizar conexiones primero (para que estén debajo de los nodos)
+            window.flowchartData.connections?.forEach(connection => {
+                renderConnection(connection);
             });
-            
-            return options;
-        }
 
-        function setDecisionOptions(options) {
-            const container = document.getElementById('decisionOptions');
-            container.innerHTML = '';
-            
-            if (options.length < 2) {
-                options = ['Sí', 'No'];
-            }
-            
-            options.forEach(option => {
-                const row = document.createElement('div');
-                row.className = 'decision-option-row';
-                row.style.cssText = 'display: flex; gap: 0.5rem; margin-bottom: 0.5rem;';
-                
-                row.innerHTML = `
-                    <input type="text" class="form-control decision-option" value="${option}" style="flex: 1;">
-                    <button type="button" class="btn btn-danger" onclick="removeDecisionOption(this)" style="padding: 0.5rem;">❌</button>
-                `;
-                
-                container.appendChild(row);
+            // Renderizar nodos
+            window.flowchartData.nodes?.forEach(node => {
+                renderNode(node);
             });
         }
 
-        // FUNCIONES DE POST-ITS
-        function createPostIt() {
-            const canvasContent = document.getElementById('canvasContent');
-            const postIt = document.createElement('div');
-            const postItId = `postit-${Date.now()}`;
+        function renderNode(node) {
+            const canvas = document.getElementById('canvas');
+            const nodeElement = document.createElement('div');
             
-            postIt.className = 'post-it';
-            postIt.id = postItId;
-            postIt.style.left = `${100 + Math.random() * 200}px`;
-            postIt.style.top = `${100 + Math.random() * 200}px`;
-            
-            const colors = ['', 'blue', 'green', 'pink'];
-            const randomColor = colors[Math.floor(Math.random() * colors.length)];
-            if (randomColor) postIt.classList.add(randomColor);
-            
-            postIt.innerHTML = `
-                <div class="post-it-controls">
-                    <button class="post-it-btn post-it-delete" onclick="deletePostIt('${postItId}')" title="Eliminar">×</button>
-                </div>
-                <textarea class="post-it-content" placeholder="Escribe tu nota aquí..." onkeyup="savePostItContent('${postItId}', this.value)"></textarea>
-            `;
-            
-            makePostItDraggable(postIt);
-            canvasContent.appendChild(postIt);
-            
-            // Enfocar el textarea
-            setTimeout(() => {
-                const textarea = postIt.querySelector('.post-it-content');
-                textarea.focus();
-            }, 100);
-            
-            addChatMessage('📝 Post-it creado', 'Sistema');
+            nodeElement.className = `flowchart-node ${node.type}`;
+            nodeElement.id = node.id;
+            nodeElement.style.left = node.x + 'px';
+            nodeElement.style.top = node.y + 'px';
+            nodeElement.style.width = node.width + 'px';
+            nodeElement.style.height = node.height + 'px';
+            nodeElement.textContent = node.text;
+            nodeElement.draggable = false;
+
+            // Event listeners para el nodo
+            nodeElement.addEventListener('mousedown', (e) => handleNodeMouseDown(e, node));
+            nodeElement.addEventListener('dblclick', (e) => editNodeText(node));
+
+            canvas.appendChild(nodeElement);
         }
 
-        function deletePostIt(postItId) {
-            const postIt = document.getElementById(postItId);
-            if (postIt && confirm('¿Eliminar esta nota?')) {
-                postIt.remove();
-                addChatMessage('🗑️ Post-it eliminado', 'Sistema');
-            }
-        }
+        function renderConnection(connection) {
+            const fromNode = window.flowchartData.nodes.find(n => n.id === connection.from);
+            const toNode = window.flowchartData.nodes.find(n => n.id === connection.to);
+            
+            if (!fromNode || !toNode) return;
 
-        function savePostItContent(postItId, content) {
-            const postIt = document.getElementById(postItId);
-            if (postIt) {
-                postIt.dataset.content = content;
-            }
-        }
-
-        function makePostItDraggable(postIt) {
-            let isDragging = false;
-            let startX, startY, startLeft, startTop;
-
-            postIt.addEventListener('mousedown', function(e) {
-                if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON') return;
-                
-                isDragging = true;
-                startX = e.clientX;
-                startY = e.clientY;
-                
-                const style = window.getComputedStyle(postIt);
-                startLeft = parseInt(style.left) || 0;
-                startTop = parseInt(style.top) || 0;
-                
-                postIt.style.zIndex = 1000;
-                e.preventDefault();
-            });
-
-            document.addEventListener('mousemove', function(e) {
-                if (!isDragging) return;
-                
-                const dx = e.clientX - startX;
-                const dy = e.clientY - startY;
-                
-                postIt.style.left = `${startLeft + dx}px`;
-                postIt.style.top = `${startTop + dy}px`;
-            });
-
-            document.addEventListener('mouseup', function() {
-                if (isDragging) {
-                    isDragging = false;
-                    postIt.style.zIndex = 50;
-                }
-            });
-        }
-
-        // MANEJO DE CONEXIONES ESPECÍFICAS PARA DECISIONES
-        function handleDecisionPointClick(decisionElement, point, option) {
-            if (!selectedForConnection) {
-                // Primer click - seleccionar punto de decisión
-                selectedForConnection = { element: decisionElement, point: point, option: option };
-                point.style.background = '#27ae60';
-                addChatMessage(`🎯 Origen seleccionado: ${option}`, 'Sistema');
-            } else if (selectedForConnection.element === decisionElement && selectedForConnection.point === point) {
-                // Deseleccionar el mismo punto
-                point.style.background = '#f39c12';
-                selectedForConnection = null;
-                addChatMessage('❌ Selección cancelada', 'Sistema');
-            } else {
-                // Error - no se puede conectar decisión a decisión directamente
-                addChatMessage('❌ Selecciona un elemento de destino, no otro punto de decisión', 'Sistema');
-            }
-        }
-
-        // Actualizar handleElementClickForConnection para manejar conexiones desde puntos de decisión
-        function handleElementClickForConnection(element) {
-            if (!connectionMode) return false;
-            
-            if (!selectedForConnection) {
-                // Seleccionar elemento normal
-                selectedForConnection = { element: element };
-                element.classList.add('selected-for-connection');
-                addChatMessage(`🎯 Elemento origen: ${element.querySelector('span').textContent}`, 'Sistema');
-                return true;
-            } else if (selectedForConnection.element === element && !selectedForConnection.point) {
-                // Deseleccionar elemento normal
-                selectedForConnection.element.classList.remove('selected-for-connection');
-                selectedForConnection = null;
-                addChatMessage('❌ Selección cancelada', 'Sistema');
-                return true;
-            } else {
-                // Crear conexión
-                if (selectedForConnection.point) {
-                    // Conexión desde punto de decisión
-                    createDecisionConnection(selectedForConnection, element);
-                } else {
-                    // Conexión normal
-                    createConnection(selectedForConnection.element, element);
-                }
-                
-                // Limpiar selección
-                if (selectedForConnection.element.classList) {
-                    selectedForConnection.element.classList.remove('selected-for-connection');
-                }
-                if (selectedForConnection.point) {
-                    selectedForConnection.point.style.background = '#f39c12';
-                }
-                selectedForConnection = null;
-                toggleConnectionMode();
-                return true;
-            }
-        }
-
-        function createDecisionConnection(fromSelection, toElement) {
-            console.log('🔗 Creando conexión de decisión:', fromSelection.option, '→', toElement.id);
-            
-            const connectionId = `conn_${Date.now()}`;
-            const connection = {
-                id: connectionId,
-                from: fromSelection.element.id,
-                fromPoint: fromSelection.point,
-                fromOption: fromSelection.option,
-                to: toElement.id,
-                segments: [],
-                arrow: null,
-                wrapper: null,
-                label: null
-            };
-            
-            // Crear contenedor para la conexión
-            const wrapper = document.createElement('div');
-            wrapper.className = 'connection-wrapper';
-            wrapper.id = connectionId + '_wrapper';
-            wrapper.style.position = 'absolute';
-            wrapper.style.top = '0';
-            wrapper.style.left = '0';
-            wrapper.style.width = '100%';
-            wrapper.style.height = '100%';
-            wrapper.style.pointerEvents = 'none';
-            wrapper.style.zIndex = '10';
-            
-            const canvasContent = document.getElementById('canvasContent');
-            canvasContent.appendChild(wrapper);
-            
-            // Crear flecha
-            const arrow = document.createElement('div');
-            arrow.className = 'connection-arrow';
-            arrow.id = connectionId + '_arrow';
-            wrapper.appendChild(arrow);
-            
-            // Crear etiqueta con las primeras dos letras
-            const label = document.createElement('div');
-            label.className = 'connection-label';
-            label.textContent = fromSelection.option.substring(0, 2).toUpperCase();
-            label.title = fromSelection.option; // Tooltip completo
-            wrapper.appendChild(label);
-            
-            connection.arrow = arrow;
-            connection.wrapper = wrapper;
-            connection.label = label;
-            connections.push(connection);
-            
-            console.log('📊 Conexión de decisión creada, actualizando posición...');
-            updateDecisionConnection(connection);
-            
-            addChatMessage(`✅ Conexión creada: ${fromSelection.option} → ${toElement.querySelector('span').textContent}`, 'Sistema');
-        }
-
-        function updateDecisionConnection(connection) {
-            const fromElement = document.getElementById(connection.from);
-            const toElement = document.getElementById(connection.to);
-            
-            if (!fromElement || !toElement || !connection.wrapper) return;
-            
-            console.log('🔄 Actualizando conexión de decisión:', connection.id);
-            
-            // Limpiar segmentos anteriores
-            connection.segments.forEach(segment => {
-                if (segment.parentNode) {
-                    segment.parentNode.removeChild(segment);
-                }
-            });
-            connection.segments = [];
-            
-            // Obtener posición del punto de decisión
-            const fromPoint = getDecisionPointPosition(fromElement, connection.fromPoint);
-            
-            // Obtener punto de borde del elemento destino
-            const toRect = toElement.getBoundingClientRect();
-            const canvasRect = fromElement.parentElement.getBoundingClientRect();
-            
-            const toEdge = getEdgePoint(toRect, fromPoint, canvasRect);
-            
-            console.log('📍 Puntos de conexión:', fromPoint, '→', toEdge);
-            
-            // Crear línea simple
+            const canvas = document.getElementById('canvas');
             const line = document.createElement('div');
-            line.style.position = 'absolute';
-            line.style.background = '#3498db';
-            line.style.height = '3px';
-            line.style.zIndex = '10';
-            line.style.pointerEvents = 'none';
-            
-            const dx = toEdge.x - fromPoint.x;
-            const dy = toEdge.y - fromPoint.y;
-            const length = Math.sqrt(dx * dx + dy * dy);
-            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-            
-            line.style.left = fromPoint.x + 'px';
-            line.style.top = fromPoint.y + 'px';
+            line.className = 'connection-line';
+
+            const fromX = fromNode.x + fromNode.width / 2;
+            const fromY = fromNode.y + fromNode.height / 2;
+            const toX = toNode.x + toNode.width / 2;
+            const toY = toNode.y + toNode.height / 2;
+
+            const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+            const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
+
+            line.style.left = fromX + 'px';
+            line.style.top = fromY + 'px';
             line.style.width = length + 'px';
-            line.style.transformOrigin = 'left center';
             line.style.transform = `rotate(${angle}deg)`;
-            
-            connection.wrapper.appendChild(line);
-            connection.segments.push(line);
-            
-            // Posicionar flecha
-            connection.arrow.style.left = (toEdge.x - 4) + 'px';
-            connection.arrow.style.top = (toEdge.y - 3) + 'px';
-            connection.arrow.style.transform = `rotate(${angle}deg)`;
-            
-            // Posicionar etiqueta en el medio de la línea
-            const midX = fromPoint.x + dx * 0.5;
-            const midY = fromPoint.y + dy * 0.5;
-            connection.label.style.left = midX + 'px';
-            connection.label.style.top = (midY - 10) + 'px';
-            
-            console.log('✅ Conexión de decisión actualizada');
+
+            canvas.appendChild(line);
         }
 
-        function getDecisionPointPosition(decisionElement, point) {
-            const canvasContent = document.getElementById('canvasContent');
-            const canvasRect = canvasContent.getBoundingClientRect();
-            const pointRect = point.getBoundingClientRect();
-            
-            const x = pointRect.left - canvasRect.left + pointRect.width / 2;
-            const y = pointRect.top - canvasRect.top + pointRect.height / 2;
-            
-            console.log('📍 Posición del punto de decisión:', { x, y });
-            return { x, y };
+        function createConnection(fromNode, toNode) {
+            const connection = {
+                id: 'conn_' + Date.now(),
+                from: fromNode.id,
+                to: toNode.id
+            };
+
+            if (!window.flowchartData.connections) {
+                window.flowchartData.connections = [];
+            }
+
+            window.flowchartData.connections.push(connection);
+            saveToFirebase();
+            renderFlowchart();
         }
+
+        function editNodeText(node) {
+            const modal = document.getElementById('textModal');
+            const input = document.getElementById('nodeTextInput');
+            
+            input.value = node.text;
+            modal.style.display = 'flex';
+            input.focus();
+
+            // Guardar referencia al nodo actual
+            window.currentEditingNode = node;
+        }
+
+        function saveNodeText() {
+            const input = document.getElementById('nodeTextInput');
+            if (window.currentEditingNode && input.value.trim()) {
+                window.currentEditingNode.text = input.value.trim();
+                saveToFirebase();
+                renderFlowchart();
+                closeTextModal();
+            }
+        }
+
+        function closeTextModal() {
+            document.getElementById('textModal').style.display = 'none';
+            window.currentEditingNode = null;
+        }
+
+        function toggleConnectionMode() {
+            connectionMode = !connectionMode;
+            connectionStart = null;
+            
+            const statusText = connectionMode ? '🔗 Modo conexión activado' : '🟢 Conectado';
+            document.getElementById('statusIndicator').innerHTML = statusText;
+            
+            document.body.style.cursor = connectionMode ? 'crosshair' : 'default';
+        }
+
+        function toggleTextMode() {
+            if (selectedNode) {
+                editNodeText(selectedNode);
+            } else {
+                alert('Selecciona un nodo primero');
+            }
+        }
+
+        async function saveToFirebase() {
+            if (window.db && window.currentUser) {
+                try {
+                    const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js");
+                    const flowchartRef = doc(window.db, 'flowcharts', 'main');
+                    
+                    await setDoc(flowchartRef, {
+                        ...window.flowchartData,
+                        lastUpdated: new Date(),
+                        updatedBy: window.currentUser.uid
+                    });
+                } catch (error) {
+                    console.error('Error guardando en Firebase:', error);
+                }
+            }
+        }
+
+        // Funciones de la toolbar
+        function saveFlowchart() {
+            const dataStr = JSON.stringify(window.flowchartData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'flowchart.json';
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function loadFlowchart() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            window.flowchartData = JSON.parse(e.target.result);
+                            saveToFirebase();
+                            renderFlowchart();
+                        } catch (error) {
+                            alert('Error al cargar el archivo');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+
+        function exportFlowchart() {
+            // Implementar exportación a imagen SVG o PNG
+            alert('Función de exportación en desarrollo');
+        }
+
+        function clearCanvas() {
+            if (confirm('¿Estás seguro de que quieres limpiar todo el canvas?')) {
+                window.flowchartData = { nodes: [], connections: [] };
+                saveToFirebase();
+                renderFlowchart();
+            }
+        }
+
+        function deleteSelected() {
+            if (selectedNode) {
+                // Eliminar el nodo
+                window.flowchartData.nodes = window.flowchartData.nodes.filter(n => n.id !== selectedNode.id);
+                
+                // Eliminar conexiones relacionadas
+                if (window.flowchartData.connections) {
+                    window.flowchartData.connections = window.flowchartData.connections.filter(
+                        c => c.from !== selectedNode.id && c.to !== selectedNode.id
+                    );
+                }
+                
+                selectedNode = null;
+                saveToFirebase();
+                renderFlowchart();
+            }
+        }
+
+        function toggleGrid() {
+            const canvas = document.getElementById('canvas');
+            const hasGrid = canvas.style.backgroundImage.includes('radial-gradient');
+            
+            if (hasGrid) {
+                canvas.style.backgroundImage = 'none';
+            } else {
+                canvas.style.backgroundImage = 'radial-gradient(circle at 20px 20px, rgba(255,255,255,0.1) 1px, transparent 1px)';
+                canvas.style.backgroundSize = '20px 20px';
+            }
+        }
+
         function zoomIn() {
-            zoomLevel = Math.min(zoomLevel + 0.2, 3);
+            zoomLevel = Math.min(zoomLevel * 1.2, 3);
             applyZoom();
-            addChatMessage(`🔍+ Zoom: ${Math.round(zoomLevel * 100)}%`, 'Sistema');
         }
 
         function zoomOut() {
-            zoomLevel = Math.max(zoomLevel - 0.2, 0.3);
+            zoomLevel = Math.max(zoomLevel / 1.2, 0.3);
             applyZoom();
-            addChatMessage(`🔍- Zoom: ${Math.round(zoomLevel * 100)}%`, 'Sistema');
         }
 
         function resetZoom() {
             zoomLevel = 1;
             applyZoom();
-            addChatMessage(`↺ Zoom restablecido: 100%`, 'Sistema');
         }
 
         function applyZoom() {
-            const canvasContent = document.getElementById('canvasContent');
-            const zoomDisplay = document.getElementById('zoomLevel');
-            
-            canvasContent.style.transform = `scale(${zoomLevel})`;
-            zoomDisplay.textContent = `${Math.round(zoomLevel * 100)}%`;
-            
-            setTimeout(() => {
-                updateAllConnections();
-            }, 100);
-        }
-
-        // SISTEMA DE CONEXIONES
-        function toggleConnectionMode() {
-            connectionMode = !connectionMode;
             const canvas = document.getElementById('canvas');
-            const indicator = document.getElementById('connectionModeIndicator');
-            
-            if (connectionMode) {
-                canvas.classList.add('connection-mode');
-                indicator.classList.add('show');
-                selectedForConnection = null;
-                addChatMessage('🔗 Modo conexión activado', 'Sistema');
-            } else {
-                canvas.classList.remove('connection-mode');
-                indicator.classList.remove('show');
-                if (selectedForConnection) {
-                    selectedForConnection.classList.remove('selected-for-connection');
-                    selectedForConnection = null;
-                }
-                addChatMessage('❌ Modo conexión desactivado', 'Sistema');
+            canvas.style.transform = `scale(${zoomLevel})`;
+            canvas.style.transformOrigin = '0 0';
+        }
+
+        // Event listeners para cerrar modal con Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeTextModal();
             }
-        }
+        });
 
-        function handleElementClickForConnection(element) {
-            if (!connectionMode) return false;
-            
-            if (!selectedForConnection) {
-                selectedForConnection = element;
-                element.classList.add('selected-for-connection');
-                addChatMessage(`🎯 Elemento origen: ${element.querySelector('span').textContent}`, 'Sistema');
-                return true;
-            } else if (selectedForConnection === element) {
-                selectedForConnection.classList.remove('selected-for-connection');
-                selectedForConnection = null;
-                addChatMessage('❌ Selección cancelada', 'Sistema');
-                return true;
-            } else {
-                createConnection(selectedForConnection, element);
-                selectedForConnection.classList.remove('selected-for-connection');
-                selectedForConnection = null;
-                toggleConnectionMode();
-                return true;
-            }
-        }
-
-        function createConnection(fromElement, toElement) {
-            console.log('🔗 Creando conexión entre:', fromElement.id, 'y', toElement.id);
-            
-            const connectionId = `conn_${Date.now()}`;
-            const connection = {
-                id: connectionId,
-                from: fromElement.id,
-                to: toElement.id,
-                segments: [],
-                arrow: null,
-                wrapper: null
-            };
-            
-            // Crear contenedor para la conexión
-            const wrapper = document.createElement('div');
-            wrapper.className = 'connection-wrapper';
-            wrapper.id = connectionId + '_wrapper';
-            wrapper.style.position = 'absolute';
-            wrapper.style.top = '0';
-            wrapper.style.left = '0';
-            wrapper.style.width = '100%';
-            wrapper.style.height = '100%';
-            wrapper.style.pointerEvents = 'none';
-            wrapper.style.zIndex = '10';
-            
-            const canvasContent = document.getElementById('canvasContent');
-            canvasContent.appendChild(wrapper);
-            
-            // Crear flecha
-            const arrow = document.createElement('div');
-            arrow.className = 'connection-arrow';
-            arrow.id = connectionId + '_arrow';
-            wrapper.appendChild(arrow);
-            
-            connection.arrow = arrow;
-            connection.wrapper = wrapper;
-            connections.push(connection);
-            
-            console.log('📊 Conexión creada, actualizando posición...');
-            updateConnectionWithCurves(connection);
-            
-            addChatMessage(`✅ Conexión creada: ${fromElement.querySelector('span').textContent} → ${toElement.querySelector('span').textContent}`, 'Sistema');
-        }
-
-        function updateConnectionWithCurves(connection) {
-            const fromElement = document.getElementById(connection.from);
-            const toElement = document.getElementById(connection.to);
-            
-            if (!fromElement || !toElement || !connection.wrapper) return;
-            
-            // Limpiar segmentos anteriores
-            connection.segments.forEach(segment => {
-                if (segment.parentNode) {
-                    segment.parentNode.removeChild(segment);
-                }
-            });
-            connection.segments = [];
-            
-            // Calcular puntos de conexión en los bordes
-            const fromRect = fromElement.getBoundingClientRect();
-            const toRect = toElement.getBoundingClientRect();
-            const canvasRect = fromElement.parentElement.getBoundingClientRect();
-            
-            // Convertir a coordenadas relativas al canvas
-            const fromCenter = {
-                x: fromRect.left - canvasRect.left + fromRect.width / 2,
-                y: fromRect.top - canvasRect.top + fromRect.height / 2
-            };
-            
-            const toCenter = {
-                x: toRect.left - canvasRect.left + toRect.width / 2,
-                y: toRect.top - canvasRect.top + toRect.height / 2
-            };
-            
-            // Calcular puntos de conexión en los bordes
-            const fromEdge = getEdgePoint(fromRect, toCenter, canvasRect);
-            const toEdge = getEdgePoint(toRect, fromCenter, canvasRect);
-            
-            // Crear conexión con codos (en forma de L o Z)
-            createSegmentedConnection(connection, fromEdge, toEdge);
-        }
-
-        function getEdgePoint(elementRect, targetPoint, canvasRect) {
-            const relativeRect = {
-                left: elementRect.left - canvasRect.left,
-                top: elementRect.top - canvasRect.top,
-                width: elementRect.width,
-                height: elementRect.height
-            };
-            
-            const centerX = relativeRect.left + relativeRect.width / 2;
-            const centerY = relativeRect.top + relativeRect.height / 2;
-            
-            const dx = targetPoint.x - centerX;
-            const dy = targetPoint.y - centerY;
-            
-            // Calcular la intersección con el borde del rectángulo
-            const halfWidth = relativeRect.width / 2;
-            const halfHeight = relativeRect.height / 2;
-            
-            let edgeX, edgeY;
-            
-            // Determinar qué borde es el más cercano
-            const ratioX = Math.abs(dx / halfWidth);
-            const ratioY = Math.abs(dy / halfHeight);
-            
-            if (ratioX > ratioY) {
-                // Intersección con borde izquierdo o derecho
-                edgeX = centerX + (dx > 0 ? halfWidth : -halfWidth);
-                edgeY = centerY + (dy * halfWidth / Math.abs(dx));
-                
-                // Asegurar que Y esté dentro de los límites
-                edgeY = Math.max(relativeRect.top, Math.min(relativeRect.top + relativeRect.height, edgeY));
-            } else {
-                // Intersección con borde superior o inferior
-                edgeY = centerY + (dy > 0 ? halfHeight : -halfHeight);
-                edgeX = centerX + (dx * halfHeight / Math.abs(dy));
-                
-                // Asegurar que X esté dentro de los límites
-                edgeX = Math.max(relativeRect.left, Math.min(relativeRect.left + relativeRect.width, edgeX));
-            }
-            
-            return { x: edgeX, y: edgeY };
-        }
-
-        function createSegmentedConnection(connection, fromPoint, toPoint) {
-            const wrapper = connection.wrapper;
-            console.log('📏 Creando segmentos desde', fromPoint, 'hasta', toPoint);
-            
-            // Limpiar segmentos anteriores
-            connection.segments.forEach(segment => {
-                if (segment.parentNode) {
-                    segment.parentNode.removeChild(segment);
-                }
-            });
-            connection.segments = [];
-            
-            // Crear una línea simple por ahora para debugging
-            const line = document.createElement('div');
-            line.style.position = 'absolute';
-            line.style.background = '#3498db';
-            line.style.height = '3px';
-            line.style.zIndex = '10';
-            line.style.pointerEvents = 'none';
-            
-            // Calcular distancia y ángulo
-            const dx = toPoint.x - fromPoint.x;
-            const dy = toPoint.y - fromPoint.y;
-            const length = Math.sqrt(dx * dx + dy * dy);
-            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-            
-            // Posicionar línea
-            line.style.left = fromPoint.x + 'px';
-            line.style.top = fromPoint.y + 'px';
-            line.style.width = length + 'px';
-            line.style.transformOrigin = 'left center';
-            line.style.transform = `rotate(${angle}deg)`;
-            
-            wrapper.appendChild(line);
-            connection.segments.push(line);
-            
-            // Posicionar flecha
-            connection.arrow.style.left = (toPoint.x - 4) + 'px';
-            connection.arrow.style.top = (toPoint.y - 3) + 'px';
-            connection.arrow.style.transform = `rotate(${angle}deg)`;
-            
-            console.log('✅ Línea creada con longitud:', length, 'y ángulo:', angle);
-        }
-
-        function updateConnectionPosition(connection) {
-            // Esta función ahora llama a la nueva función con codos
-            updateConnectionWithCurves(connection);
-        }
-
-        function updateAllConnections() {
-            connections.forEach(connection => {
-                if (connection.fromPoint) {
-                    // Conexión desde punto de decisión
-                    updateDecisionConnection(connection);
-                } else {
-                    // Conexión normal
-                    updateConnectionWithCurves(connection);
-                }
-            });
-        }
-
-        // DRAG AND DROP
-        function makeElementDraggable(element) {
-            let isDragging = false;
-            let hasDragged = false;
-            let startX, startY, startLeft, startTop;
-            let mouseDownTime = 0;
-
-            function getElementPosition(el) {
-                const style = window.getComputedStyle(el);
-                return {
-                    left: parseInt(style.left) || 0,
-                    top: parseInt(style.top) || 0
-                };
-            }
-
-            element.addEventListener('mousedown', function(e) {
-                mouseDownTime = Date.now();
-                isDragging = false;
-                hasDragged = false;
-                
-                startX = e.clientX;
-                startY = e.clientY;
-                
-                const pos = getElementPosition(element);
-                startLeft = pos.left;
-                startTop = pos.top;
-                
-                element.style.zIndex = 1000;
+        // Prevenir selección de texto durante el arrastre
+        document.addEventListener('selectstart', function(e) {
+            if (isDragging) {
                 e.preventDefault();
-                e.stopPropagation();
-            });
-
-            document.addEventListener('mousemove', function(e) {
-                if (mouseDownTime === 0) return;
-                
-                const deltaX = Math.abs(e.clientX - startX);
-                const deltaY = Math.abs(e.clientY - startY);
-                const timeDiff = Date.now() - mouseDownTime;
-                
-                if ((deltaX > 5 || deltaY > 5) && timeDiff > 50) {
-                    if (!isDragging) {
-                        isDragging = true;
-                        hasDragged = true;
-                        element.style.cursor = 'grabbing';
-                        addChatMessage(`🖱️ Arrastrando: ${element.querySelector('span').textContent}`, 'Sistema');
-                    }
-                    
-                    const dx = e.clientX - startX;
-                    const dy = e.clientY - startY;
-                    
-                    const newLeft = Math.max(0, startLeft + dx);
-                    const newTop = Math.max(0, startTop + dy);
-                    
-                    element.style.left = `${newLeft}px`;
-                    element.style.top = `${newTop}px`;
-                    
-                    updateAllConnections();
-                }
-            });
-
-            document.addEventListener('mouseup', function(e) {
-                if (mouseDownTime === 0) return;
-                
-                const timeDiff = Date.now() - mouseDownTime;
-                
-                if (isDragging) {
-                    addChatMessage(`✅ Elemento reposicionado`, 'Sistema');
-                    updateAllConnections();
-                } else if (!hasDragged && timeDiff < 500) {
-                    if (handleElementClickForConnection(element)) {
-                        console.log('👆 Click manejado por modo conexión');
-                    } else {
-                        addChatMessage(`👆 Click en: ${element.querySelector('span').textContent}`, 'Sistema');
-                    }
-                }
-                
-                isDragging = false;
-                hasDragged = false;
-                mouseDownTime = 0;
-                element.style.zIndex = 'auto';
-                element.style.cursor = 'move';
-                
-                e.stopPropagation();
-            });
-
-            element.addEventListener('dblclick', function(e) {
-                editElement(element.id);
-                e.preventDefault();
-                e.stopPropagation();
-            });
-
-            element.style.cursor = 'move';
-        }
-
-        // FUNCIONES DE CHAT
-        function sendMessage() {
-            const input = document.getElementById('chatInput');
-            const message = input.value.trim();
-            
-            if (message) {
-                addChatMessage(message, 'Juan Pérez', 'Moderador');
-                input.value = '';
-            }
-        }
-
-        function handleChatKeypress(event) {
-            if (event.key === 'Enter') {
-                sendMessage();
-            }
-        }
-
-        function addChatMessage(message, author = 'Sistema', role = '') {
-            const chatMessages = document.getElementById('chatMessages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message';
-            
-            const userColors = {
-                'Juan Pérez': '#8B4513',        // Área Administrativa
-                'María García': '#3498db',      // Área Técnica 
-                'Carlos López': '#f1c40f',      // Área Logística
-                'Ana Martínez': '#9b59b6',      // Dirección
-                'Cliente': '#27ae60',           // Cliente
-                'Sistema': '#95a5a6'            // Sistema (Proveedor/Gris)
-            };
-            
-            messageDiv.style.borderLeftColor = userColors[author] || '#95a5a6';
-            
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-            
-            messageDiv.innerHTML = `
-                <div class="message-author">${author}${role ? ` (${role})` : ''}</div>
-                <div class="message-content">${message}</div>
-                <div class="message-time">${timeString}</div>
-            `;
-            
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        // FUNCIONES DE BOTONES
-        function saveData() {
-            addChatMessage('💾 Datos guardados exitosamente', 'Sistema');
-        }
-
-        function startVoting() {
-            addChatMessage('🗳️ Votación iniciada por el moderador', 'Sistema');
-        }
-
-        function finishSession() {
-            addChatMessage('🔚 Sesión finalizada por el moderador', 'Sistema');
-        }
-
-        function clearCanvas() {
-            if (confirm('¿Limpiar todos los elementos?')) {
-                const elements = document.querySelectorAll('.flowchart-element');
-                elements.forEach(el => {
-                    if (el.id !== 'start-1') el.remove();
-                });
-                connections = [];
-                const connectionElements = document.querySelectorAll('.connection-line, .connection-arrow, .connection-segment, .connection-wrapper');
-                connectionElements.forEach(el => el.remove());
-                addChatMessage('🗑️ Canvas limpiado', 'Sistema');
-            }
-        }
-
-        function openConceptModal(conceptId) {
-            addChatMessage(`📚 Abriendo concepto: ${conceptId}`, 'Sistema');
-        }
-
-        function showMessage(message) {
-            addChatMessage(`ℹ️ ${message}`, 'Sistema');
-        }
-
-        // RESIZE FUNCTIONALITY
-        let isResizing = false;
-        let startY = 0;
-        let startHeight = 0;
-
-        document.getElementById('resizeHandle').addEventListener('mousedown', function(e) {
-            isResizing = true;
-            startY = e.clientY;
-            startHeight = document.getElementById('moderatorPanel').offsetHeight;
-            addChatMessage('🎯 Redimensionando panel...', 'Sistema');
-            e.preventDefault();
-        });
-
-        document.addEventListener('mousemove', function(e) {
-            if (isResizing) {
-                const deltaY = startY - e.clientY;
-                const newHeight = Math.max(100, Math.min(500, startHeight + deltaY));
-                document.getElementById('moderatorPanel').style.height = newHeight + 'px';
             }
         });
-
-        document.addEventListener('mouseup', function() {
-            if (isResizing) {
-                isResizing = false;
-                addChatMessage('✅ Panel redimensionado', 'Sistema');
-            }
-        });
-
-        // INICIALIZACIÓN
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Inicializando aplicación...');
-            
-            const startElement = document.getElementById('start-1');
-            if (startElement) {
-                makeElementDraggable(startElement);
-                startElement.dataset.description = 'Punto de inicio del proceso';
-            }
-            
-            document.getElementById('configModal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeModal();
-                }
-            });
-            
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && connectionMode) {
-                    toggleConnectionMode();
-                }
-            });
-            
-            applyZoom();
-            
-            addChatMessage('✅ Sistema listo - Haz clic en elementos para configurarlos', 'Sistema');
-            addChatMessage('💡 Doble clic en elementos para editarlos', 'Sistema');
-            addChatMessage('🖱️ Arrastra elementos para moverlos', 'Sistema');
-            addChatMessage('🔗 Usa "Conectar" para unir elementos con flechas', 'Sistema');
-            addChatMessage('🔍 Usa los controles de zoom para navegar mejor', 'Sistema');
-        });
-
-        console.log('✅ JavaScript cargado correctamente');
     </script>
 </body>
 </html>
