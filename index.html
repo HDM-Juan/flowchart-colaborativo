@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flowchart Colaborativo</title>
+    <title>Proceso</title>
     <style>
         * {
             margin: 0;
@@ -180,6 +180,37 @@
             border-color: #45a049;
         }
 
+        /* Entity color styles */
+        .flowchart-node.entity-administrativo {
+            background: #8B4513;
+            color: white;
+            border-color: #654321;
+        }
+
+        .flowchart-node.entity-tecnico {
+            background: #1E90FF;
+            color: white;
+            border-color: #0066CC;
+        }
+
+        .flowchart-node.entity-logistica {
+            background: #FFD700;
+            color: #333;
+            border-color: #DAA520;
+        }
+
+        /* Decision node connection points */
+        .decision-point {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #667eea;
+            border: 2px solid white;
+            border-radius: 50%;
+            cursor: crosshair;
+            z-index: 10;
+        }
+
         .connection-line {
             position: absolute;
             height: 2px;
@@ -283,7 +314,7 @@
 <body>
     <!-- Header -->
     <div class="header">
-        <h1>🔄 Flowchart Colaborativo</h1>
+        <h1>🔄 Proceso</h1>
     </div>
 
     <!-- Toolbar -->
@@ -353,11 +384,55 @@
         🔴 Desconectado
     </div>
 
-    <!-- Modal for Text Editing -->
+    <!-- Modal for Element Editing -->
     <div class="modal" id="textModal">
         <div class="modal-content">
-            <h3>✏️ Editar Texto</h3>
-            <input type="text" id="nodeTextInput" placeholder="Ingresa el texto del nodo">
+            <h3>✏️ Editar Elemento</h3>
+            
+            <!-- Name input -->
+            <div style="margin-bottom: 1rem;">
+                <label for="nodeNameInput" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Nombre:</label>
+                <input type="text" id="nodeNameInput" placeholder="Nombre del elemento">
+            </div>
+            
+            <!-- Legacy text input (keeping for compatibility) -->
+            <div style="margin-bottom: 1rem;">
+                <label for="nodeTextInput" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Texto:</label>
+                <input type="text" id="nodeTextInput" placeholder="Texto a mostrar">
+            </div>
+            
+            <!-- Entity assignment -->
+            <div style="margin-bottom: 1rem;">
+                <label for="nodeEntitySelect" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Entidad:</label>
+                <select id="nodeEntitySelect" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px;">
+                    <option value="">Sin asignar</option>
+                    <option value="administrativo">Administrativo</option>
+                    <option value="tecnico">Técnico</option>
+                    <option value="logistica">Logística</option>
+                </select>
+            </div>
+            
+            <!-- Description toggle -->
+            <div style="margin-bottom: 1rem;">
+                <button type="button" class="btn" onclick="toggleDescription()" id="descriptionToggle" style="width: 100%;">
+                    📝 Mostrar Descripción
+                </button>
+            </div>
+            
+            <!-- Description field (hidden by default) -->
+            <div id="descriptionField" style="display: none; margin-bottom: 1rem;">
+                <label for="nodeDescriptionInput" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Descripción:</label>
+                <textarea id="nodeDescriptionInput" placeholder="Descripción detallada del elemento" 
+                         style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px; min-height: 80px; resize: vertical;"></textarea>
+            </div>
+            
+            <!-- Decision responses (only for decision nodes) -->
+            <div id="decisionResponses" style="display: none; margin-bottom: 1rem;">
+                <label for="responseCount" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Número de Respuestas:</label>
+                <input type="number" id="responseCount" min="2" max="6" value="2" 
+                       style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px;">
+            </div>
+            
             <div style="margin-top: 1rem;">
                 <button class="btn primary" onclick="saveNodeText()">✅ Guardar</button>
                 <button class="btn" onclick="closeTextModal()">❌ Cancelar</button>
@@ -555,8 +630,12 @@
                 x: x,
                 y: y,
                 text: getDefaultText(type),
+                name: '',
+                description: '',
+                entity: '',
                 width: 120,
-                height: 60
+                height: 60,
+                responses: type === 'decision' ? 2 : 0
             };
 
             window.flowchartData.nodes.push(node);
@@ -593,7 +672,12 @@
             const canvas = document.getElementById('canvas');
             const nodeElement = document.createElement('div');
             
-            nodeElement.className = `flowchart-node ${node.type}`;
+            let className = `flowchart-node ${node.type}`;
+            if (node.entity) {
+                className += ` entity-${node.entity}`;
+            }
+            
+            nodeElement.className = className;
             nodeElement.id = node.id;
             nodeElement.style.left = node.x + 'px';
             nodeElement.style.top = node.y + 'px';
@@ -605,8 +689,14 @@
             // Event listeners para el nodo
             nodeElement.addEventListener('mousedown', (e) => handleNodeMouseDown(e, node));
             nodeElement.addEventListener('dblclick', (e) => editNodeText(node));
+            nodeElement.addEventListener('contextmenu', (e) => handleNodeRightClick(e, node));
 
             canvas.appendChild(nodeElement);
+            
+            // Add decision response points if it's a decision node
+            if (node.type === 'decision' && node.responses > 0) {
+                renderDecisionPoints(node, nodeElement);
+            }
         }
 
         function renderConnection(connection) {
@@ -618,6 +708,7 @@
             const canvas = document.getElementById('canvas');
             const line = document.createElement('div');
             line.className = 'connection-line';
+            line.dataset.connectionId = connection.id;
 
             const fromX = fromNode.x + fromNode.width / 2;
             const fromY = fromNode.y + fromNode.height / 2;
@@ -631,15 +722,73 @@
             line.style.top = fromY + 'px';
             line.style.width = length + 'px';
             line.style.transform = `rotate(${angle}deg)`;
+            
+            // Add right-click handler for connection management
+            line.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                showConnectionContextMenu(e, connection);
+            });
 
             canvas.appendChild(line);
         }
 
+        function showConnectionContextMenu(e, connection) {
+            // Remove existing context menu
+            const existingMenu = document.getElementById('contextMenu');
+            if (existingMenu) {
+                existingMenu.remove();
+            }
+            
+            const menu = document.createElement('div');
+            menu.id = 'contextMenu';
+            menu.style.cssText = `
+                position: fixed;
+                top: ${e.clientY}px;
+                left: ${e.clientX}px;
+                background: white;
+                border: 1px solid #ccc;
+                border-radius: 6px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 10001;
+                min-width: 150px;
+            `;
+            
+            const deleteOption = document.createElement('div');
+            deleteOption.textContent = '🗑️ Eliminar Conexión';
+            deleteOption.style.cssText = 'padding: 8px 12px; cursor: pointer; color: #f44336;';
+            deleteOption.addEventListener('click', () => {
+                deleteConnection(connection);
+                menu.remove();
+            });
+            
+            menu.appendChild(deleteOption);
+            document.body.appendChild(menu);
+            
+            // Close menu when clicking elsewhere
+            setTimeout(() => {
+                document.addEventListener('click', function closeMenu() {
+                    menu.remove();
+                    document.removeEventListener('click', closeMenu);
+                });
+            }, 100);
+        }
+
+        function deleteConnection(connection) {
+            if (confirm('¿Estás seguro de que quieres eliminar esta conexión?')) {
+                window.flowchartData.connections = window.flowchartData.connections.filter(
+                    c => c.id !== connection.id
+                );
+                saveToFirebase();
+                renderFlowchart();
+            }
+        }
+
         function createConnection(fromNode, toNode) {
             const connection = {
-                id: 'conn_' + Date.now(),
+                id: 'conn_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
                 from: fromNode.id,
-                to: toNode.id
+                to: toNode.id,
+                fromResponseIndex: fromNode.responseIndex || null
             };
 
             if (!window.flowchartData.connections) {
@@ -653,23 +802,203 @@
 
         function editNodeText(node) {
             const modal = document.getElementById('textModal');
-            const input = document.getElementById('nodeTextInput');
+            const nameInput = document.getElementById('nodeNameInput');
+            const textInput = document.getElementById('nodeTextInput');
+            const descriptionInput = document.getElementById('nodeDescriptionInput');
+            const entitySelect = document.getElementById('nodeEntitySelect');
+            const responseCountInput = document.getElementById('responseCount');
+            const decisionResponses = document.getElementById('decisionResponses');
             
-            input.value = node.text;
+            // Populate fields with existing data
+            nameInput.value = node.name || '';
+            textInput.value = node.text || '';
+            descriptionInput.value = node.description || '';
+            entitySelect.value = node.entity || '';
+            responseCountInput.value = node.responses || 2;
+            
+            // Show/hide decision-specific fields
+            if (node.type === 'decision') {
+                decisionResponses.style.display = 'block';
+            } else {
+                decisionResponses.style.display = 'none';
+            }
+            
+            // Reset description field visibility
+            document.getElementById('descriptionField').style.display = 'none';
+            document.getElementById('descriptionToggle').textContent = '📝 Mostrar Descripción';
+            
             modal.style.display = 'flex';
-            input.focus();
+            nameInput.focus();
 
             // Guardar referencia al nodo actual
             window.currentEditingNode = node;
         }
 
+        function toggleDescription() {
+            const descriptionField = document.getElementById('descriptionField');
+            const toggleButton = document.getElementById('descriptionToggle');
+            
+            if (descriptionField.style.display === 'none') {
+                descriptionField.style.display = 'block';
+                toggleButton.textContent = '📝 Ocultar Descripción';
+            } else {
+                descriptionField.style.display = 'none';
+                toggleButton.textContent = '📝 Mostrar Descripción';
+            }
+        }
+
         function saveNodeText() {
-            const input = document.getElementById('nodeTextInput');
-            if (window.currentEditingNode && input.value.trim()) {
-                window.currentEditingNode.text = input.value.trim();
+            const nameInput = document.getElementById('nodeNameInput');
+            const textInput = document.getElementById('nodeTextInput');
+            const descriptionInput = document.getElementById('nodeDescriptionInput');
+            const entitySelect = document.getElementById('nodeEntitySelect');
+            const responseCountInput = document.getElementById('responseCount');
+            
+            if (window.currentEditingNode) {
+                // Update node properties
+                window.currentEditingNode.name = nameInput.value.trim();
+                window.currentEditingNode.text = textInput.value.trim() || getDefaultText(window.currentEditingNode.type);
+                window.currentEditingNode.description = descriptionInput.value.trim();
+                window.currentEditingNode.entity = entitySelect.value;
+                
+                if (window.currentEditingNode.type === 'decision') {
+                    window.currentEditingNode.responses = parseInt(responseCountInput.value) || 2;
+                }
+                
                 saveToFirebase();
                 renderFlowchart();
                 closeTextModal();
+            }
+        }
+
+        function renderDecisionPoints(node, nodeElement) {
+            const canvas = document.getElementById('canvas');
+            const responses = node.responses || 2;
+            const radius = Math.min(node.width, node.height) / 2;
+            const centerX = node.x + node.width / 2;
+            const centerY = node.y + node.height / 2;
+            
+            for (let i = 0; i < responses; i++) {
+                const angle = (2 * Math.PI * i) / responses - Math.PI / 2; // Start from top
+                const pointX = centerX + (radius + 15) * Math.cos(angle);
+                const pointY = centerY + (radius + 15) * Math.sin(angle);
+                
+                const point = document.createElement('div');
+                point.className = 'decision-point';
+                point.style.left = (pointX - 6) + 'px';
+                point.style.top = (pointY - 6) + 'px';
+                point.dataset.nodeId = node.id;
+                point.dataset.responseIndex = i;
+                
+                // Add response identifier letters
+                const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+                if (i < letters.length) {
+                    const label = document.createElement('div');
+                    label.textContent = letters[i];
+                    label.style.position = 'absolute';
+                    label.style.left = '15px';
+                    label.style.top = '-2px';
+                    label.style.fontSize = '10px';
+                    label.style.fontWeight = 'bold';
+                    label.style.color = '#333';
+                    point.appendChild(label);
+                }
+                
+                // Add click handler for connections
+                point.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                    if (connectionMode) {
+                        handleDecisionPointClick(e, node, i);
+                    }
+                });
+                
+                canvas.appendChild(point);
+            }
+        }
+
+        function handleDecisionPointClick(e, node, responseIndex) {
+            if (!connectionStart) {
+                connectionStart = { ...node, responseIndex: responseIndex };
+                document.getElementById('statusIndicator').innerHTML = '🔗 Selecciona el nodo destino';
+            } else if (connectionStart.id !== node.id) {
+                createConnection(connectionStart, node);
+                connectionStart = null;
+                document.getElementById('statusIndicator').innerHTML = '✅ Conexión creada';
+                setTimeout(() => {
+                    document.getElementById('statusIndicator').innerHTML = '🟢 Conectado';
+                }, 2000);
+            }
+        }
+
+        function handleNodeRightClick(e, node) {
+            e.preventDefault();
+            showNodeContextMenu(e, node);
+        }
+
+        function showNodeContextMenu(e, node) {
+            // Remove existing context menu
+            const existingMenu = document.getElementById('contextMenu');
+            if (existingMenu) {
+                existingMenu.remove();
+            }
+            
+            const menu = document.createElement('div');
+            menu.id = 'contextMenu';
+            menu.style.cssText = `
+                position: fixed;
+                top: ${e.clientY}px;
+                left: ${e.clientX}px;
+                background: white;
+                border: 1px solid #ccc;
+                border-radius: 6px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 10001;
+                min-width: 150px;
+            `;
+            
+            const editOption = document.createElement('div');
+            editOption.textContent = '✏️ Editar';
+            editOption.style.cssText = 'padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #eee;';
+            editOption.addEventListener('click', () => {
+                editNodeText(node);
+                menu.remove();
+            });
+            
+            const deleteOption = document.createElement('div');
+            deleteOption.textContent = '🗑️ Eliminar';
+            deleteOption.style.cssText = 'padding: 8px 12px; cursor: pointer; color: #f44336;';
+            deleteOption.addEventListener('click', () => {
+                deleteNode(node);
+                menu.remove();
+            });
+            
+            menu.appendChild(editOption);
+            menu.appendChild(deleteOption);
+            document.body.appendChild(menu);
+            
+            // Close menu when clicking elsewhere
+            setTimeout(() => {
+                document.addEventListener('click', function closeMenu() {
+                    menu.remove();
+                    document.removeEventListener('click', closeMenu);
+                });
+            }, 100);
+        }
+
+        function deleteNode(node) {
+            if (confirm('¿Estás seguro de que quieres eliminar este nodo?')) {
+                // Remove node
+                window.flowchartData.nodes = window.flowchartData.nodes.filter(n => n.id !== node.id);
+                
+                // Remove related connections
+                if (window.flowchartData.connections) {
+                    window.flowchartData.connections = window.flowchartData.connections.filter(
+                        c => c.from !== node.id && c.to !== node.id
+                    );
+                }
+                
+                saveToFirebase();
+                renderFlowchart();
             }
         }
 
