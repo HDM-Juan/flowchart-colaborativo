@@ -699,6 +699,60 @@
             }
         }
 
+        // Geometric helper functions for edge-to-edge connections
+        function getNodeConnectionPoint(node, targetX, targetY, isSource = true) {
+            const centerX = node.x + node.width / 2;
+            const centerY = node.y + node.height / 2;
+            
+            // Calculate direction vector from center to target
+            const dx = targetX - centerX;
+            const dy = targetY - centerY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance === 0) return { x: centerX, y: centerY };
+            
+            // Normalize direction vector
+            const dirX = dx / distance;
+            const dirY = dy / distance;
+            
+            if (node.type === 'decision') {
+                // Decision nodes are circular
+                const radius = Math.min(node.width, node.height) / 2;
+                return {
+                    x: centerX + dirX * radius,
+                    y: centerY + dirY * radius
+                };
+            } else {
+                // Rectangular nodes (process, start-end, input-output)
+                return getRectangleEdgePoint(node, centerX, centerY, dirX, dirY);
+            }
+        }
+        
+        function getRectangleEdgePoint(node, centerX, centerY, dirX, dirY) {
+            const halfWidth = node.width / 2;
+            const halfHeight = node.height / 2;
+            
+            // Calculate intersection with rectangle edges
+            // Check which edge the line intersects first
+            const tTop = dirY > 0 ? halfHeight / dirY : Infinity;
+            const tBottom = dirY < 0 ? -halfHeight / dirY : Infinity;
+            const tRight = dirX > 0 ? halfWidth / dirX : Infinity;
+            const tLeft = dirX < 0 ? -halfWidth / dirX : Infinity;
+            
+            // Find the minimum positive t (closest edge intersection)
+            const t = Math.min(
+                tTop > 0 ? tTop : Infinity,
+                tBottom > 0 ? tBottom : Infinity,
+                tRight > 0 ? tRight : Infinity,
+                tLeft > 0 ? tLeft : Infinity
+            );
+            
+            return {
+                x: centerX + dirX * t,
+                y: centerY + dirY * t
+            };
+        }
+
         function renderConnection(connection) {
             const fromNode = window.flowchartData.nodes.find(n => n.id === connection.from);
             const toNode = window.flowchartData.nodes.find(n => n.id === connection.to);
@@ -710,10 +764,20 @@
             line.className = 'connection-line';
             line.dataset.connectionId = connection.id;
 
-            const fromX = fromNode.x + fromNode.width / 2;
-            const fromY = fromNode.y + fromNode.height / 2;
-            const toX = toNode.x + toNode.width / 2;
-            const toY = toNode.y + toNode.height / 2;
+            // Calculate centers first
+            const fromCenterX = fromNode.x + fromNode.width / 2;
+            const fromCenterY = fromNode.y + fromNode.height / 2;
+            const toCenterX = toNode.x + toNode.width / 2;
+            const toCenterY = toNode.y + toNode.height / 2;
+
+            // Get edge connection points instead of centers
+            const fromPoint = getNodeConnectionPoint(fromNode, toCenterX, toCenterY, true);
+            const toPoint = getNodeConnectionPoint(toNode, fromCenterX, fromCenterY, false);
+
+            const fromX = fromPoint.x;
+            const fromY = fromPoint.y;
+            const toX = toPoint.x;
+            const toY = toPoint.y;
 
             const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
             const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
