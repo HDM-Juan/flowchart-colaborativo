@@ -314,15 +314,23 @@
 <body>
     <!-- Header -->
     <div class="header">
-        <h1>🔄 Proceso</h1>
+        <h1 id="processTitle">🔄 Proceso</h1>
+        <div id="processInfo" style="text-align: center; color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-top: 0.5rem;">
+            <span id="processName">Sin título</span> | 
+            <span id="versionInfo">Versión 1.0</span> | 
+            <span id="processDate"></span> |
+            <span id="userInfo">Usuario</span>
+        </div>
     </div>
 
     <!-- Toolbar -->
     <div class="toolbar">
-        <button class="btn primary" onclick="saveFlowchart()">💾 Guardar</button>
+        <button class="btn primary" onclick="saveFlowchart()">💾 Guardar Borrador</button>
         <button class="btn" onclick="loadFlowchart()">📂 Cargar</button>
         <button class="btn" onclick="exportFlowchart()">📤 Exportar</button>
-        <button class="btn" onclick="clearCanvas()">🗑️ Limpiar</button>
+        <button class="btn" onclick="exportToPDF()">📄 Exportar PDF</button>
+        <button class="btn" onclick="showLibrary()">📚 Biblioteca</button>
+        <button class="btn" onclick="clearCanvas()">🗑️ Borrar Todo</button>
         <button class="btn" onclick="toggleGrid()">📊 Grid</button>
         <button class="btn danger" onclick="deleteSelected()">❌ Eliminar</button>
         <div style="margin-left: auto;">
@@ -440,6 +448,68 @@
         </div>
     </div>
 
+    <!-- User Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <h3>👤 Identificación de Usuario</h3>
+            <div style="margin-bottom: 1rem;">
+                <label for="userNameInput" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Nombre de Usuario:</label>
+                <input type="text" id="userNameInput" placeholder="Ingresa tu nombre">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label for="userRoleSelect" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Rol:</label>
+                <select id="userRoleSelect" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px;">
+                    <option value="user">Usuario</option>
+                    <option value="admin">Administrador</option>
+                </select>
+            </div>
+            <div style="margin-top: 1rem;">
+                <button class="btn primary" onclick="loginUser()">✅ Ingresar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Process Info Modal -->
+    <div class="modal" id="processModal">
+        <div class="modal-content">
+            <h3>📋 Información del Proceso</h3>
+            <div style="margin-bottom: 1rem;">
+                <label for="processNameInput" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Nombre del Proceso:</label>
+                <input type="text" id="processNameInput" placeholder="Nombre del proceso">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label for="processVersionInput" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Versión:</label>
+                <input type="text" id="processVersionInput" placeholder="1.0" value="1.0">
+            </div>
+            <div style="margin-top: 1rem;">
+                <button class="btn primary" onclick="saveProcessInfo()">✅ Guardar</button>
+                <button class="btn" onclick="closeProcessModal()">❌ Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Library Modal -->
+    <div class="modal" id="libraryModal">
+        <div class="modal-content" style="max-width: 800px; max-height: 80vh; overflow-y: auto;">
+            <h3>📚 Biblioteca de Procesos</h3>
+            
+            <div style="margin-bottom: 1rem; display: flex; gap: 1rem; align-items: center;">
+                <button class="btn" onclick="showApprovedProcesses()">📋 Procesos Aprobados</button>
+                <button class="btn" onclick="showMyDrafts()">📝 Mis Borradores</button>
+                <button class="btn primary" onclick="createNewProcess()">➕ Nuevo Proceso</button>
+                <button class="btn" onclick="updateProcessInfo()">✏️ Editar Info Proceso</button>
+            </div>
+            
+            <div id="libraryContent">
+                <!-- Content will be populated dynamically -->
+            </div>
+            
+            <div style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                <button class="btn" onclick="closeLibrary()">❌ Cerrar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase Configuration -->
     <script type="module">
         // Import the functions you need from the SDKs you need
@@ -466,27 +536,70 @@
         window.db = db;
         window.auth = auth;
         window.currentUser = null;
+        window.currentUserData = {
+            name: '',
+            role: 'user', // 'user' or 'admin'
+            uid: null
+        };
+        window.currentProcess = {
+            name: 'Sin título',
+            version: '1.0',
+            isDraft: true,
+            draftOwner: '',
+            lastModified: new Date(),
+            approvedBy: null,
+            approvedDate: null
+        };
         window.flowchartData = {
             nodes: [],
             connections: []
         };
+        window.maxUsers = 10;
+        window.connectedUsers = new Set();
 
         // Autenticación anónima
-        signInAnonymously(auth).then(() => {
-            document.getElementById('statusIndicator').innerHTML = '🟢 Conectado';
-            console.log('Usuario autenticado correctamente');
-        }).catch((error) => {
-            console.error('Error de autenticación:', error);
-            document.getElementById('statusIndicator').innerHTML = '🔴 Error de conexión';
-        });
+        try {
+            signInAnonymously(auth).then(() => {
+                document.getElementById('statusIndicator').innerHTML = '🟢 Conectado';
+                console.log('Usuario autenticado correctamente');
+            }).catch((error) => {
+                console.error('Error de autenticación:', error);
+                document.getElementById('statusIndicator').innerHTML = '🔴 Error de conexión - Modo offline';
+                // Initialize anyway in offline mode
+                initializeOfflineMode();
+            });
+        } catch (error) {
+            console.error('Firebase no disponible:', error);
+            document.getElementById('statusIndicator').innerHTML = '🔴 Modo offline';
+            initializeOfflineMode();
+        }
+
+        function initializeOfflineMode() {
+            // Set a default user for offline mode
+            window.currentUser = { uid: 'offline-user' };
+            window.currentUserData.uid = 'offline-user';
+            showLoginModal();
+        }
 
         // Listener de autenticación
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                window.currentUser = user;
-                initializeFlowchart();
-            }
-        });
+        try {
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    window.currentUser = user;
+                    window.currentUserData.uid = user.uid;
+                    
+                    // Show login modal if user hasn't set their name
+                    if (!window.currentUserData.name || window.currentUserData.name === 'Usuario') {
+                        showLoginModal();
+                    } else {
+                        initializeFlowchart();
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Firebase auth not available:', error);
+            // Continue with offline mode
+        }
 
         // Inicializar el flowchart
         function initializeFlowchart() {
@@ -1038,7 +1151,22 @@
                     });
                 } catch (error) {
                     console.error('Error guardando en Firebase:', error);
+                    // Fallback to local storage
+                    localStorage.setItem('flowchart-draft', JSON.stringify({
+                        ...window.flowchartData,
+                        processInfo: window.currentProcess,
+                        lastModified: new Date(),
+                        lastModifiedBy: window.currentUserData.name
+                    }));
                 }
+            } else {
+                // Save to local storage as fallback
+                localStorage.setItem('flowchart-draft', JSON.stringify({
+                    ...window.flowchartData,
+                    processInfo: window.currentProcess,
+                    lastModified: new Date(),
+                    lastModifiedBy: window.currentUserData.name
+                }));
             }
         }
 
@@ -1083,8 +1211,9 @@
         }
 
         function clearCanvas() {
-            if (confirm('¿Estás seguro de que quieres limpiar todo el canvas?')) {
+            if (confirm('¿Estás seguro de que quieres borrar todo el canvas y empezar de nuevo?')) {
                 window.flowchartData = { nodes: [], connections: [] };
+                window.currentProcess.lastModified = new Date();
                 saveToFirebase();
                 renderFlowchart();
             }
@@ -1145,6 +1274,8 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeTextModal();
+                closeLibrary();
+                closeProcessModal();
             }
         });
 
@@ -1154,6 +1285,585 @@
                 e.preventDefault();
             }
         });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ensure currentUserData is properly initialized
+            if (!window.currentUserData) {
+                window.currentUserData = {
+                    name: 'Usuario',
+                    role: 'user',
+                    uid: null
+                };
+            }
+            
+            // Ensure currentProcess is properly initialized
+            if (!window.currentProcess) {
+                window.currentProcess = {
+                    name: 'Sin título',
+                    version: '1.0',
+                    isDraft: true,
+                    draftOwner: '',
+                    lastModified: new Date(),
+                    approvedBy: null,
+                    approvedDate: null
+                };
+            }
+            
+            // Initialize connected users tracking
+            if (!window.connectedUsers) {
+                window.connectedUsers = new Set();
+            }
+            
+            updateProcessDisplay();
+            updateDateDisplay();
+            updateUserDisplay();
+            updateConnectedUsersDisplay();
+        });
+
+        // === NEW FUNCTIONALITY ===
+
+        // User Management
+        function showLoginModal() {
+            document.getElementById('loginModal').style.display = 'flex';
+        }
+
+        function loginUser() {
+            const userName = document.getElementById('userNameInput').value.trim();
+            const userRole = document.getElementById('userRoleSelect').value;
+            
+            if (!userName) {
+                alert('Por favor ingresa tu nombre');
+                return;
+            }
+            
+            // Check user limit
+            if (window.connectedUsers.size >= window.maxUsers) {
+                alert(`La aplicación ha alcanzado el límite máximo de ${window.maxUsers} usuarios conectados. Intenta de nuevo más tarde.`);
+                return;
+            }
+            
+            window.currentUserData.name = userName;
+            window.currentUserData.role = userRole;
+            
+            // Add user to connected users
+            window.connectedUsers.add(userName);
+            
+            document.getElementById('loginModal').style.display = 'none';
+            updateUserDisplay();
+            updateConnectedUsersDisplay();
+            
+            // Initialize flowchart - create fallback if function doesn't exist
+            if (typeof initializeFlowchart === 'function') {
+                initializeFlowchart();
+            } else {
+                // Fallback initialization
+                console.log('Flowchart initialized in offline mode');
+            }
+        }
+
+        function updateUserDisplay() {
+            const userInfo = document.getElementById('userInfo');
+            if (window.currentUserData && window.currentUserData.name) {
+                const roleIcon = window.currentUserData.role === 'admin' ? '👑' : '👤';
+                userInfo.textContent = `${roleIcon} ${window.currentUserData.name}`;
+            } else {
+                userInfo.textContent = '👤 Usuario';
+            }
+        }
+
+        function updateConnectedUsersDisplay() {
+            const usersList = document.getElementById('usersList');
+            if (usersList) {
+                const users = Array.from(window.connectedUsers);
+                if (users.length === 0) {
+                    usersList.innerHTML = '<div>🟢 Usuario Principal</div>';
+                } else {
+                    let html = '';
+                    users.forEach((user, index) => {
+                        const icon = user === window.currentUserData.name ? 
+                            (window.currentUserData.role === 'admin' ? '👑' : '🟢') : '🟤';
+                        html += `<div>${icon} ${user}</div>`;
+                    });
+                    usersList.innerHTML = html;
+                }
+                
+                // Update user count
+                const connectedCount = window.connectedUsers.size;
+                const remaining = window.maxUsers - connectedCount;
+                const userCountInfo = document.createElement('div');
+                userCountInfo.style.fontSize = '0.8rem';
+                userCountInfo.style.color = 'rgba(255,255,255,0.7)';
+                userCountInfo.style.marginTop = '0.5rem';
+                userCountInfo.textContent = `${connectedCount}/${window.maxUsers} usuarios`;
+                
+                if (remaining <= 2) {
+                    userCountInfo.style.color = '#ffcc00';
+                }
+                if (remaining === 0) {
+                    userCountInfo.style.color = '#ff6666';
+                }
+                
+                usersList.appendChild(userCountInfo);
+            }
+        }
+
+        // Process Management
+        function updateProcessDisplay() {
+            const processName = document.getElementById('processName');
+            const versionInfo = document.getElementById('versionInfo');
+            
+            let displayName = window.currentProcess.name;
+            if (window.currentProcess.isDraft && window.currentUserData && window.currentUserData.name) {
+                displayName += ` (Borrador - ${window.currentUserData.name})`;
+            }
+            
+            processName.textContent = displayName;
+            versionInfo.textContent = `Versión ${window.currentProcess.version}`;
+        }
+
+        function updateDateDisplay() {
+            const processDate = document.getElementById('processDate');
+            const now = new Date();
+            processDate.textContent = now.toLocaleDateString('es-ES');
+        }
+
+        function updateProcessInfo() {
+            const modal = document.getElementById('processModal');
+            const nameInput = document.getElementById('processNameInput');
+            const versionInput = document.getElementById('processVersionInput');
+            
+            nameInput.value = window.currentProcess.name;
+            versionInput.value = window.currentProcess.version;
+            
+            modal.style.display = 'flex';
+        }
+
+        function saveProcessInfo() {
+            const nameInput = document.getElementById('processNameInput');
+            const versionInput = document.getElementById('processVersionInput');
+            
+            window.currentProcess.name = nameInput.value.trim() || 'Sin título';
+            window.currentProcess.version = versionInput.value.trim() || '1.0';
+            window.currentProcess.lastModified = new Date();
+            
+            updateProcessDisplay();
+            closeProcessModal();
+            saveToFirebase();
+        }
+
+        function closeProcessModal() {
+            document.getElementById('processModal').style.display = 'none';
+        }
+
+        // Library Management
+        function showLibrary() {
+            document.getElementById('libraryModal').style.display = 'flex';
+            showMyDrafts(); // Default view
+        }
+
+        function closeLibrary() {
+            document.getElementById('libraryModal').style.display = 'none';
+        }
+
+        async function showApprovedProcesses() {
+            const content = document.getElementById('libraryContent');
+            content.innerHTML = '<div style="text-align: center; padding: 2rem;">📋 Cargando procesos aprobados...</div>';
+            
+            try {
+                const approvedProcesses = await loadFromGoogleSheets();
+                
+                if (approvedProcesses.length === 0) {
+                    content.innerHTML = `
+                        <h4>📋 Procesos Aprobados</h4>
+                        <div style="text-align: center; padding: 2rem; color: #666;">
+                            No hay procesos aprobados aún.
+                            <br><br>
+                            Los administradores pueden aprobar borradores para que aparezcan aquí.
+                        </div>
+                    `;
+                } else {
+                    let html = '<h4>📋 Procesos Aprobados (Biblioteca)</h4><div style="margin-top: 1rem;">';
+                    
+                    approvedProcesses.forEach(process => {
+                        html += `
+                            <div style="border: 1px solid #4CAF50; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; background: #f8fff8;">
+                                <h5>✅ ${process.name}</h5>
+                                <p style="margin: 0.5rem 0; color: #666; font-size: 0.9rem;">
+                                    Versión ${process.version} | Aprobado por: ${process.approvedBy} | 
+                                    Fecha: ${new Date(process.approvedDate).toLocaleDateString('es-ES')}
+                                    <br>Autor original: ${process.originalAuthor}
+                                </p>
+                                <div style="margin-top: 1rem;">
+                                    <button class="btn primary" onclick="loadApprovedProcess('${process.id}')" style="margin-right: 0.5rem;">📂 Usar como Base</button>
+                                    <button class="btn" onclick="viewProcessDetails('${process.id}')">👁️ Ver Detalles</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    content.innerHTML = html;
+                }
+            } catch (error) {
+                content.innerHTML = '<div style="color: red; text-align: center;">Error al cargar procesos aprobados desde Google Sheets</div>';
+            }
+        }
+
+        async function showMyDrafts() {
+            const content = document.getElementById('libraryContent');
+            const isAdmin = window.currentUserData.role === 'admin';
+            const title = isAdmin ? '📝 Todos los Borradores (Vista Admin)' : '📝 Mis Borradores';
+            
+            content.innerHTML = '<div style="text-align: center; padding: 2rem;">📝 Cargando borradores...</div>';
+            
+            try {
+                // This would fetch user drafts from Firebase
+                const drafts = await getUserDrafts(isAdmin);
+                
+                if (drafts.length === 0) {
+                    content.innerHTML = `
+                        <h4>${title}</h4>
+                        <div style="text-align: center; padding: 2rem; color: #666;">
+                            ${isAdmin ? 'No hay borradores de ningún usuario.' : 'No tienes borradores guardados.'}
+                            <br><br>
+                            ${isAdmin ? 'Los usuarios pueden crear borradores que aparecerán aquí.' : 'Crea un nuevo proceso o modifica uno existente para crear un borrador.'}
+                        </div>
+                    `;
+                } else {
+                    let html = `<h4>${title}</h4><div style="margin-top: 1rem;">`;
+                    
+                    drafts.forEach(draft => {
+                        const isCurrentUser = draft.owner === window.currentUserData.name;
+                        const ownerDisplay = isAdmin && !isCurrentUser ? ` - Por: ${draft.owner}` : '';
+                        
+                        html += `
+                            <div style="border: 1px solid #ddd; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; background: ${isCurrentUser ? '#f9f9f9' : '#fff8dc'};">
+                                <h5>${draft.name}${ownerDisplay}</h5>
+                                <p style="margin: 0.5rem 0; color: #666; font-size: 0.9rem;">
+                                    Versión ${draft.version} | Modificado: ${new Date(draft.lastModified).toLocaleString('es-ES')}
+                                    ${isAdmin && !isCurrentUser ? '<br><strong>Borrador de otro usuario</strong>' : ''}
+                                </p>
+                                <div style="margin-top: 1rem;">
+                                    <button class="btn" onclick="loadDraft('${draft.id}')" style="margin-right: 0.5rem;">📂 Cargar</button>
+                                    ${isCurrentUser || isAdmin ? 
+                                        `<button class="btn danger" onclick="deleteDraft('${draft.id}')" style="margin-right: 0.5rem;">🗑️ Eliminar</button>` : ''}
+                                    ${isAdmin ? 
+                                        `<button class="btn primary" onclick="approveDraft('${draft.id}')">✅ Aprobar</button>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    content.innerHTML = html;
+                }
+            } catch (error) {
+                content.innerHTML = '<div style="color: red; text-align: center;">Error al cargar borradores</div>';
+            }
+        }
+
+        async function getUserDrafts(includeAll = false) {
+            // Enhanced placeholder - would fetch from Firebase in real implementation
+            const baseDrafts = [
+                {
+                    id: 'draft1',
+                    name: 'Proceso de Ejemplo',
+                    version: '1.0',
+                    lastModified: new Date(),
+                    owner: window.currentUserData.name
+                }
+            ];
+            
+            if (includeAll && window.currentUserData.role === 'admin') {
+                // Add drafts from other users for admin view
+                baseDrafts.push(
+                    {
+                        id: 'draft2',
+                        name: 'Proceso de Ventas',
+                        version: '1.2',
+                        lastModified: new Date(Date.now() - 86400000), // Yesterday
+                        owner: 'Juan'
+                    },
+                    {
+                        id: 'draft3',
+                        name: 'Proceso de Compras',
+                        version: '2.0',
+                        lastModified: new Date(Date.now() - 172800000), // 2 days ago
+                        owner: 'Maria'
+                    }
+                );
+            }
+            
+            return baseDrafts;
+        }
+
+        function createNewProcess() {
+            if (confirm('¿Crear un nuevo proceso? Se perderán los cambios no guardados.')) {
+                window.flowchartData = { nodes: [], connections: [] };
+                window.currentProcess = {
+                    name: 'Nuevo Proceso',
+                    version: '1.0',
+                    isDraft: true,
+                    draftOwner: window.currentUserData.name,
+                    lastModified: new Date()
+                };
+                
+                updateProcessDisplay();
+                renderFlowchart();
+                closeLibrary();
+                updateProcessInfo(); // Show the process info modal
+            }
+        }
+
+        async function loadDraft(draftId) {
+            // Placeholder - would load from Firebase
+            alert('Funcionalidad de cargar borrador en desarrollo');
+            closeLibrary();
+        }
+
+        async function deleteDraft(draftId) {
+            if (confirm('¿Estás seguro de que quieres eliminar este borrador?')) {
+                // Placeholder - would delete from Firebase
+                alert('Borrador eliminado');
+                showMyDrafts(); // Refresh the list
+            }
+        }
+
+        async function approveDraft(draftId) {
+            if (window.currentUserData.role !== 'admin') {
+                alert('Solo los administradores pueden aprobar procesos');
+                return;
+            }
+            
+            if (confirm('¿Aprobar este proceso? Se agregará a la biblioteca de procesos aprobados y se guardará en Google Sheets.')) {
+                try {
+                    // Get current flowchart data
+                    const approvalData = {
+                        ...window.flowchartData,
+                        processInfo: {
+                            ...window.currentProcess,
+                            isDraft: false,
+                            approvedBy: window.currentUserData.name,
+                            approvedDate: new Date()
+                        }
+                    };
+                    
+                    // Save to Google Sheets
+                    await saveToGoogleSheets(approvalData);
+                    
+                    alert('Proceso aprobado y guardado en la biblioteca de Google Sheets');
+                    showMyDrafts(); // Refresh the list
+                } catch (error) {
+                    alert('Error al aprobar el proceso: ' + error.message);
+                }
+            }
+        }
+
+        async function loadApprovedProcess(processId) {
+            if (confirm('¿Cargar este proceso aprobado como base para un nuevo borrador? Se perderán los cambios no guardados.')) {
+                try {
+                    // In a real implementation, this would load the process data from Google Sheets
+                    alert('Cargando proceso aprobado como nuevo borrador...');
+                    
+                    // Create a new draft based on the approved process
+                    window.currentProcess = {
+                        name: 'Copia de Proceso Aprobado',
+                        version: '1.0',
+                        isDraft: true,
+                        draftOwner: window.currentUserData.name,
+                        lastModified: new Date(),
+                        basedOn: processId
+                    };
+                    
+                    updateProcessDisplay();
+                    closeLibrary();
+                } catch (error) {
+                    alert('Error al cargar el proceso: ' + error.message);
+                }
+            }
+        }
+
+        function viewProcessDetails(processId) {
+            alert('Mostrando detalles del proceso aprobado. En una implementación completa, esto abriría una vista detallada del proceso.');
+        }
+
+        // PDF Export (simplified version without external dependencies)
+        async function exportToPDF() {
+            try {
+                // For now, show a print dialog which can save as PDF
+                const originalTitle = document.title;
+                document.title = `${window.currentProcess.name}_v${window.currentProcess.version}`;
+                
+                // Create a print-friendly version
+                const printContent = createPrintContent();
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(printContent);
+                printWindow.document.close();
+                printWindow.focus();
+                printWindow.print();
+                
+                document.title = originalTitle;
+                
+            } catch (error) {
+                console.error('Error exporting PDF:', error);
+                alert('Error al exportar PDF. Usa Ctrl+P para imprimir o guardar como PDF.');
+            }
+        }
+
+        function createPrintContent() {
+            const canvas = document.getElementById('canvas');
+            const canvasHTML = canvas.innerHTML;
+            
+            return `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${window.currentProcess.name} - Versión ${window.currentProcess.version}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+                        .flowchart-node { 
+                            position: absolute; 
+                            min-width: 120px; 
+                            min-height: 60px; 
+                            background: white; 
+                            border: 2px solid #333; 
+                            border-radius: 8px; 
+                            padding: 1rem; 
+                            display: flex; 
+                            align-items: center; 
+                            justify-content: center; 
+                            text-align: center; 
+                            font-weight: 500; 
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                        }
+                        .flowchart-node.start-end { border-radius: 30px; background: #4CAF50; color: white; }
+                        .flowchart-node.decision { border-radius: 50%; min-width: 80px; min-height: 80px; }
+                        .flowchart-node.entity-administrativo { background: #8B4513; color: white; }
+                        .flowchart-node.entity-tecnico { background: #1E90FF; color: white; }
+                        .flowchart-node.entity-logistica { background: #FFD700; color: #333; }
+                        .canvas { position: relative; height: 600px; border: 1px solid #ccc; }
+                        .connection-line { position: absolute; height: 2px; background: #333; }
+                        @media print { 
+                            body { margin: 0; } 
+                            .canvas { height: auto; min-height: 400px; page-break-inside: avoid; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>${window.currentProcess.name}</h1>
+                        <p>Versión ${window.currentProcess.version} | ${new Date().toLocaleDateString('es-ES')}</p>
+                        <p>Usuario: ${window.currentUserData ? window.currentUserData.name : 'Usuario'}</p>
+                        ${window.currentProcess.isDraft ? '<p><strong>Estado: Borrador</strong></p>' : ''}
+                    </div>
+                    <div class="canvas">
+                        ${canvasHTML}
+                    </div>
+                </body>
+                </html>
+            `;
+        }
+
+        // Enhanced save function
+        async function saveFlowchart() {
+            if (!window.currentUserData.name || window.currentUserData.name === 'Usuario') {
+                alert('Primero debes identificarte como usuario');
+                showLoginModal();
+                return;
+            }
+            
+            // Update process metadata
+            window.currentProcess.lastModified = new Date();
+            window.currentProcess.draftOwner = window.currentUserData.name;
+            
+            // Combine flowchart data with process metadata
+            const saveData = {
+                ...window.flowchartData,
+                processInfo: window.currentProcess,
+                lastModifiedBy: window.currentUserData.name,
+                lastModified: new Date()
+            };
+            
+            // Save to Firebase (draft)
+            await saveToFirebase();
+            
+            // Also save as downloadable file
+            const dataStr = JSON.stringify(saveData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${window.currentProcess.name.replace(/[^a-z0-9]/gi, '_')}_borrador.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            alert('Borrador guardado correctamente');
+        }
+
+        // Google Sheets Integration (placeholder implementation)
+        async function saveToGoogleSheets(processData) {
+            // This would integrate with Google Sheets API
+            // For now, it's a placeholder showing what would be saved
+            const sheetData = {
+                processName: processData.processInfo.name,
+                version: processData.processInfo.version,
+                approvedBy: window.currentUserData.name,
+                approvedDate: new Date().toISOString(),
+                originalAuthor: processData.processInfo.draftOwner,
+                lastModified: processData.processInfo.lastModified,
+                nodeCount: processData.nodes ? processData.nodes.length : 0,
+                connectionCount: processData.connections ? processData.connections.length : 0,
+                flowchartData: JSON.stringify(processData)
+            };
+            
+            console.log('Would save to Google Sheets:', sheetData);
+            
+            // In a real implementation, this would use the Google Sheets API:
+            // await gapi.client.sheets.spreadsheets.values.append({
+            //     spreadsheetId: 'YOUR_SPREADSHEET_ID',
+            //     range: 'ProcessLibrary!A:H',
+            //     valueInputOption: 'RAW',
+            //     resource: {
+            //         values: [[
+            //             sheetData.processName,
+            //             sheetData.version,
+            //             sheetData.approvedBy,
+            //             sheetData.approvedDate,
+            //             sheetData.originalAuthor,
+            //             sheetData.lastModified,
+            //             sheetData.nodeCount,
+            //             sheetData.flowchartData
+            //         ]]
+            //     }
+            // });
+            
+            return true;
+        }
+
+        async function loadFromGoogleSheets() {
+            // This would load approved processes from Google Sheets
+            // For now, return placeholder data
+            return [
+                {
+                    id: 'approved1',
+                    name: 'Proceso de Ventas Aprobado',
+                    version: '2.0',
+                    approvedBy: 'Admin',
+                    approvedDate: new Date('2024-01-15'),
+                    originalAuthor: 'Juan'
+                },
+                {
+                    id: 'approved2', 
+                    name: 'Proceso de Compras Aprobado',
+                    version: '1.5',
+                    approvedBy: 'Admin',
+                    approvedDate: new Date('2024-02-01'),
+                    originalAuthor: 'Maria'
+                }
+            ];
+        }
     </script>
 </body>
 </html>
