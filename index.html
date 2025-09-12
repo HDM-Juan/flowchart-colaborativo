@@ -554,6 +554,8 @@
             nodes: [],
             connections: []
         };
+        window.maxUsers = 10;
+        window.connectedUsers = new Set();
 
         // Autenticación anónima
         try {
@@ -1308,9 +1310,15 @@
                 };
             }
             
+            // Initialize connected users tracking
+            if (!window.connectedUsers) {
+                window.connectedUsers = new Set();
+            }
+            
             updateProcessDisplay();
             updateDateDisplay();
             updateUserDisplay();
+            updateConnectedUsersDisplay();
         });
 
         // === NEW FUNCTIONALITY ===
@@ -1329,12 +1337,29 @@
                 return;
             }
             
+            // Check user limit
+            if (window.connectedUsers.size >= window.maxUsers) {
+                alert(`La aplicación ha alcanzado el límite máximo de ${window.maxUsers} usuarios conectados. Intenta de nuevo más tarde.`);
+                return;
+            }
+            
             window.currentUserData.name = userName;
             window.currentUserData.role = userRole;
             
+            // Add user to connected users
+            window.connectedUsers.add(userName);
+            
             document.getElementById('loginModal').style.display = 'none';
             updateUserDisplay();
-            initializeFlowchart();
+            updateConnectedUsersDisplay();
+            
+            // Initialize flowchart - create fallback if function doesn't exist
+            if (typeof initializeFlowchart === 'function') {
+                initializeFlowchart();
+            } else {
+                // Fallback initialization
+                console.log('Flowchart initialized in offline mode');
+            }
         }
 
         function updateUserDisplay() {
@@ -1344,6 +1369,42 @@
                 userInfo.textContent = `${roleIcon} ${window.currentUserData.name}`;
             } else {
                 userInfo.textContent = '👤 Usuario';
+            }
+        }
+
+        function updateConnectedUsersDisplay() {
+            const usersList = document.getElementById('usersList');
+            if (usersList) {
+                const users = Array.from(window.connectedUsers);
+                if (users.length === 0) {
+                    usersList.innerHTML = '<div>🟢 Usuario Principal</div>';
+                } else {
+                    let html = '';
+                    users.forEach((user, index) => {
+                        const icon = user === window.currentUserData.name ? 
+                            (window.currentUserData.role === 'admin' ? '👑' : '🟢') : '🟤';
+                        html += `<div>${icon} ${user}</div>`;
+                    });
+                    usersList.innerHTML = html;
+                }
+                
+                // Update user count
+                const connectedCount = window.connectedUsers.size;
+                const remaining = window.maxUsers - connectedCount;
+                const userCountInfo = document.createElement('div');
+                userCountInfo.style.fontSize = '0.8rem';
+                userCountInfo.style.color = 'rgba(255,255,255,0.7)';
+                userCountInfo.style.marginTop = '0.5rem';
+                userCountInfo.textContent = `${connectedCount}/${window.maxUsers} usuarios`;
+                
+                if (remaining <= 2) {
+                    userCountInfo.style.color = '#ffcc00';
+                }
+                if (remaining === 0) {
+                    userCountInfo.style.color = '#ff6666';
+                }
+                
+                usersList.appendChild(userCountInfo);
             }
         }
 
@@ -1451,35 +1512,43 @@
 
         async function showMyDrafts() {
             const content = document.getElementById('libraryContent');
-            content.innerHTML = '<div style="text-align: center; padding: 2rem;">📝 Cargando mis borradores...</div>';
+            const isAdmin = window.currentUserData.role === 'admin';
+            const title = isAdmin ? '📝 Todos los Borradores (Vista Admin)' : '📝 Mis Borradores';
+            
+            content.innerHTML = '<div style="text-align: center; padding: 2rem;">📝 Cargando borradores...</div>';
             
             try {
                 // This would fetch user drafts from Firebase
-                const drafts = await getUserDrafts();
+                const drafts = await getUserDrafts(isAdmin);
                 
                 if (drafts.length === 0) {
                     content.innerHTML = `
-                        <h4>📝 Mis Borradores</h4>
+                        <h4>${title}</h4>
                         <div style="text-align: center; padding: 2rem; color: #666;">
-                            No tienes borradores guardados.
+                            ${isAdmin ? 'No hay borradores de ningún usuario.' : 'No tienes borradores guardados.'}
                             <br><br>
-                            Crea un nuevo proceso o modifica uno existente para crear un borrador.
+                            ${isAdmin ? 'Los usuarios pueden crear borradores que aparecerán aquí.' : 'Crea un nuevo proceso o modifica uno existente para crear un borrador.'}
                         </div>
                     `;
                 } else {
-                    let html = '<h4>📝 Mis Borradores</h4><div style="margin-top: 1rem;">';
+                    let html = `<h4>${title}</h4><div style="margin-top: 1rem;">`;
                     
                     drafts.forEach(draft => {
+                        const isCurrentUser = draft.owner === window.currentUserData.name;
+                        const ownerDisplay = isAdmin && !isCurrentUser ? ` - Por: ${draft.owner}` : '';
+                        
                         html += `
-                            <div style="border: 1px solid #ddd; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; background: #f9f9f9;">
-                                <h5>${draft.name}</h5>
+                            <div style="border: 1px solid #ddd; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; background: ${isCurrentUser ? '#f9f9f9' : '#fff8dc'};">
+                                <h5>${draft.name}${ownerDisplay}</h5>
                                 <p style="margin: 0.5rem 0; color: #666; font-size: 0.9rem;">
                                     Versión ${draft.version} | Modificado: ${new Date(draft.lastModified).toLocaleString('es-ES')}
+                                    ${isAdmin && !isCurrentUser ? '<br><strong>Borrador de otro usuario</strong>' : ''}
                                 </p>
                                 <div style="margin-top: 1rem;">
                                     <button class="btn" onclick="loadDraft('${draft.id}')" style="margin-right: 0.5rem;">📂 Cargar</button>
-                                    <button class="btn danger" onclick="deleteDraft('${draft.id}')" style="margin-right: 0.5rem;">🗑️ Eliminar</button>
-                                    ${window.currentUserData.role === 'admin' ? 
+                                    ${isCurrentUser || isAdmin ? 
+                                        `<button class="btn danger" onclick="deleteDraft('${draft.id}')" style="margin-right: 0.5rem;">🗑️ Eliminar</button>` : ''}
+                                    ${isAdmin ? 
                                         `<button class="btn primary" onclick="approveDraft('${draft.id}')">✅ Aprobar</button>` : ''}
                                 </div>
                             </div>
@@ -1494,9 +1563,9 @@
             }
         }
 
-        async function getUserDrafts() {
-            // Placeholder - would fetch from Firebase in real implementation
-            return [
+        async function getUserDrafts(includeAll = false) {
+            // Enhanced placeholder - would fetch from Firebase in real implementation
+            const baseDrafts = [
                 {
                     id: 'draft1',
                     name: 'Proceso de Ejemplo',
@@ -1505,6 +1574,28 @@
                     owner: window.currentUserData.name
                 }
             ];
+            
+            if (includeAll && window.currentUserData.role === 'admin') {
+                // Add drafts from other users for admin view
+                baseDrafts.push(
+                    {
+                        id: 'draft2',
+                        name: 'Proceso de Ventas',
+                        version: '1.2',
+                        lastModified: new Date(Date.now() - 86400000), // Yesterday
+                        owner: 'Juan'
+                    },
+                    {
+                        id: 'draft3',
+                        name: 'Proceso de Compras',
+                        version: '2.0',
+                        lastModified: new Date(Date.now() - 172800000), // 2 days ago
+                        owner: 'Maria'
+                    }
+                );
+            }
+            
+            return baseDrafts;
         }
 
         function createNewProcess() {
