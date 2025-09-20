@@ -1,11 +1,13 @@
 import React from "react";
-import ListaDiagrams from "./ListaDiagrams";
+import FlowchartEditor from "./FlowchartEditor";
 
 function App() {
   return (
     <div>
-      {/* Tu código principal */}
-      <ListaDiagrams />
+      <header className="header">
+        <h1>Diagrama de Flujo Colaborativo</h1>
+      </header>
+      <FlowchartEditor />
     </div>
   );
 }

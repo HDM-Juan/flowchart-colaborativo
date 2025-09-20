@@ -288,6 +288,91 @@ body {
     font-size: 1rem;
 }
 
+/* Post-it styles */
+.post-it {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    background: #FFE066;
+    border: none;
+    border-radius: 0;
+    padding: 8px;
+    cursor: move;
+    user-select: none;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    text-align: left;
+    font-weight: normal;
+    color: #333;
+    font-size: 12px;
+    line-height: 1.2;
+    box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.1),
+        0 1px 2px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    transform: rotate(-1deg);
+    z-index: 5;
+}
+
+.post-it:hover {
+    transform: rotate(0deg) scale(1.02);
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.15),
+        0 2px 4px rgba(0, 0, 0, 0.12);
+    z-index: 6;
+}
+
+.post-it:nth-child(even) {
+    transform: rotate(1deg);
+}
+
+.post-it:nth-child(3n) {
+    transform: rotate(-0.5deg);
+}
+
+.post-it span {
+    width: 100%;
+    word-wrap: break-word;
+    overflow: hidden;
+    display: block;
+}
+
+.post-it-input {
+    width: 100%;
+    height: 80px;
+    border: none;
+    background: transparent;
+    font-size: 12px;
+    font-family: inherit;
+    color: inherit;
+    outline: none;
+    resize: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Different post-it colors */
+.post-it.yellow {
+    background: #FFE066;
+}
+
+.post-it.pink {
+    background: #FFB3D9;
+}
+
+.post-it.blue {
+    background: #B3D9FF;
+}
+
+.post-it.green {
+    background: #B3FFB3;
+}
+
+.post-it.orange {
+    background: #FFD9B3;
+}
+
 @media (max-width: 768px) {
     .sidebar {
         width: 200px;
@@ -300,5 +385,11 @@ body {
     .btn {
         padding: 0.4rem 0.8rem;
         font-size: 0.8rem;
+    }
+
+    .post-it {
+        width: 80px;
+        height: 80px;
+        font-size: 11px;
     }
 }
