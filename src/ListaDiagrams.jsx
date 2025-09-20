@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { initializeApp } from "firebase/app";
-import { getFirestore, collection, getDocs } from "firebase/firestore";
-import { firebaseConfig } from "./firebaseConfig";
-
-// Inicializa Firebase y Firestore
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "./firebaseConfig";
 
 function ListaDiagrams() {
   const [diagrams, setDiagrams] = useState([]);
@@ -23,7 +18,7 @@ function ListaDiagrams() {
   }, []);
 
   return (
-    <div>
+    <div className="diagrams-container">
       <h2>Diagrams en Firestore</h2>
       <ul>
         {diagrams.map(d => (
