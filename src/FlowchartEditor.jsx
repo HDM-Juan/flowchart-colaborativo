@@ -1,63 +1,79 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { getFirestore, doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { firebaseConfig } from './firebaseConfig';
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+const POST_IT_COLORS = [
+  '#FFE066', // Yellow
+  '#FFB3D9', // Pink  
+  '#B3D9FF', // Blue
+  '#B3FFB3', // Green
+  '#FFD9B3'  // Orange
+];
+
 const FlowchartEditor = () => {
   const [nodes, setNodes] = useState([]);
   const [postIts, setPostIts] = useState([]);
   const [draggedItem, setDraggedItem] = useState(null);
   const [editingPostIt, setEditingPostIt] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
 
   // Mock diagram ID for now - in a real app this would come from routing/props
   const diagramId = 'demo-diagram';
 
-  // Load data from Firebase
+  // Save post-its to Firebase with error handling
+  const savePostIts = useCallback(async (newPostIts) => {
+    try {
+      const docRef = doc(db, 'diagrams', diagramId);
+      await setDoc(docRef, { 
+        postIts: newPostIts,
+        nodes: nodes,
+        connections: [],
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+      setIsConnected(true);
+    } catch (error) {
+      console.warn('Firebase save failed, working offline:', error.message);
+      setIsConnected(false);
+    }
+  }, [nodes, diagramId]);
+
+  // Load data from Firebase with fallback to local state
   useEffect(() => {
     const docRef = doc(db, 'diagrams', diagramId);
     
-    const unsubscribe = onSnapshot(docRef, (doc) => {
-      if (doc.exists()) {
-        const data = doc.data();
-        setNodes(data.nodes || []);
-        setPostIts(data.postIts || []);
-      } else {
-        // Create initial document
-        updateDoc(docRef, {
-          nodes: [],
-          postIts: [],
-          connections: []
-        }).catch(() => {
-          // Document doesn't exist, that's ok for demo
-        });
+    const unsubscribe = onSnapshot(docRef, 
+      (doc) => {
+        if (doc.exists()) {
+          const data = doc.data();
+          setNodes(data.nodes || []);
+          setPostIts(data.postIts || []);
+          setIsConnected(true);
+        }
+      },
+      (error) => {
+        console.warn('Firebase connection failed, working offline:', error.message);
+        setIsConnected(false);
       }
-    });
+    );
 
     return () => unsubscribe();
   }, [diagramId]);
 
-  // Save post-its to Firebase
-  const savePostIts = async (newPostIts) => {
-    try {
-      const docRef = doc(db, 'diagrams', diagramId);
-      await updateDoc(docRef, { postIts: newPostIts });
-    } catch (error) {
-      console.error('Error saving post-its:', error);
-    }
-  };
-
   // Create new post-it
   const createPostIt = (x = 100, y = 100) => {
+    const randomColor = POST_IT_COLORS[Math.floor(Math.random() * POST_IT_COLORS.length)];
     const newPostIt = {
-      id: Date.now().toString(),
+      id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9),
       x,
       y,
       text: 'Nuevo post-it',
-      color: '#FFE066' // Default yellow
+      color: randomColor,
+      createdAt: new Date().toISOString()
     };
     
     const newPostIts = [...postIts, newPostIt];
@@ -68,11 +84,13 @@ const FlowchartEditor = () => {
   // Handle drag start
   const handleDragStart = (e, item, type) => {
     setDraggedItem({ ...item, type });
+    e.dataTransfer.effectAllowed = 'move';
   };
 
   // Handle drag over canvas
   const handleDragOver = (e) => {
     e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
   };
 
   // Handle drop on canvas
@@ -102,7 +120,7 @@ const FlowchartEditor = () => {
   // Handle post-it text edit
   const handlePostItEdit = (id, newText) => {
     const newPostIts = postIts.map(p => 
-      p.id === id ? { ...p, text: newText } : p
+      p.id === id ? { ...p, text: newText, updatedAt: new Date().toISOString() } : p
     );
     setPostIts(newPostIts);
     savePostIts(newPostIts);
@@ -135,6 +153,7 @@ const FlowchartEditor = () => {
             className="palette-item"
             draggable
             onDragStart={(e) => handleDragStart(e, {}, 'new-postit')}
+            title="Arrastra para crear un post-it"
           >
             📝 Post-it
           </div>
@@ -148,6 +167,19 @@ const FlowchartEditor = () => {
             🟢 Inicio/Fin
           </div>
         </div>
+        
+        {/* Connection status */}
+        <div className="connection-status" style={{ 
+          marginTop: '1rem', 
+          padding: '0.5rem', 
+          borderRadius: '4px',
+          backgroundColor: isConnected ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 152, 0, 0.2)',
+          color: 'white',
+          fontSize: '0.8rem',
+          textAlign: 'center'
+        }}>
+          {isConnected ? '🟢 Conectado' : '🟡 Modo offline'}
+        </div>
       </div>
 
       {/* Canvas */}
@@ -158,10 +190,10 @@ const FlowchartEditor = () => {
           onDrop={handleDrop}
         >
           {/* Render post-its */}
-          {postIts.map((postIt) => (
+          {postIts.map((postIt, index) => (
             <div
               key={postIt.id}
-              className="post-it"
+              className={`post-it post-it-${index % 3}`} // Add rotation classes
               style={{
                 left: postIt.x,
                 top: postIt.y,
@@ -174,15 +206,15 @@ const FlowchartEditor = () => {
                 e.preventDefault();
                 deletePostIt(postIt.id);
               }}
+              title="Doble click para editar, clic derecho para eliminar"
             >
               {editingPostIt === postIt.id ? (
-                <input
-                  type="text"
+                <textarea
+                  className="post-it-input"
                   defaultValue={postIt.text}
                   autoFocus
                   onBlur={(e) => handlePostItEdit(postIt.id, e.target.value)}
                   onKeyDown={(e) => handleKeyPress(e, postIt.id)}
-                  className="post-it-input"
                 />
               ) : (
                 <span>{postIt.text}</span>
@@ -203,6 +235,22 @@ const FlowchartEditor = () => {
               {node.text}
             </div>
           ))}
+
+          {/* Canvas instructions */}
+          {postIts.length === 0 && (
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              color: 'rgba(255, 255, 255, 0.5)',
+              textAlign: 'center',
+              pointerEvents: 'none'
+            }}>
+              <p>📝 Arrastra un post-it desde la barra lateral</p>
+              <p>para empezar a crear notas</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

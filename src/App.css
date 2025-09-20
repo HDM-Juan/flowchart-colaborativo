@@ -323,12 +323,29 @@ body {
     z-index: 6;
 }
 
-.post-it:nth-child(even) {
+/* Different rotation classes for variety */
+.post-it.post-it-0 {
+    transform: rotate(-1deg);
+}
+
+.post-it.post-it-1 {
     transform: rotate(1deg);
 }
 
-.post-it:nth-child(3n) {
+.post-it.post-it-2 {
     transform: rotate(-0.5deg);
+}
+
+.post-it.post-it-0:hover {
+    transform: rotate(0deg) scale(1.02);
+}
+
+.post-it.post-it-1:hover {
+    transform: rotate(0deg) scale(1.02);
+}
+
+.post-it.post-it-2:hover {
+    transform: rotate(0deg) scale(1.02);
 }
 
 .post-it span {
@@ -371,6 +388,17 @@ body {
 
 .post-it.orange {
     background: #FFD9B3;
+}
+
+/* Connection status styles */
+.connection-status {
+    margin-top: 1rem;
+    padding: 0.5rem;
+    border-radius: 4px;
+    color: white;
+    font-size: 0.8rem;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 @media (max-width: 768px) {
