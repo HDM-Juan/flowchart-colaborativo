@@ -1,12 +1,19 @@
 import React from "react";
+import { AuthProvider } from "./contexts/AuthContext";
+import AdminPanel from "./components/AdminPanel";
 import ListaDiagrams from "./ListaDiagrams";
+import "./App.css";
 
 function App() {
   return (
-    <div>
-      {/* Tu código principal */}
-      <ListaDiagrams />
-    </div>
+    <AuthProvider>
+      <div className="app-container">
+        <AdminPanel />
+        <div className="main-content">
+          <ListaDiagrams />
+        </div>
+      </div>
+    </AuthProvider>
   );
 }
 
