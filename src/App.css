@@ -126,6 +126,11 @@ body {
     cursor: move;
 }
 
+.canvas.dragging-over {
+    background-color: rgba(102, 126, 234, 0.1);
+    border: 2px dashed rgba(102, 126, 234, 0.5);
+}
+
 .flowchart-node {
     position: absolute;
     min-width: 120px;

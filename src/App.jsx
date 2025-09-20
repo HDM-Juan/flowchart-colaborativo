@@ -1,11 +1,10 @@
 import React from "react";
-import ListaDiagrams from "./ListaDiagrams";
+import FlowchartEditor from "./FlowchartEditor";
 
 function App() {
   return (
     <div>
-      {/* Tu código principal */}
-      <ListaDiagrams />
+      <FlowchartEditor />
     </div>
   );
 }
