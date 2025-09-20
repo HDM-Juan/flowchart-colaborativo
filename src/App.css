@@ -1,0 +1,304 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 1rem 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.header h1 {
+    color: white;
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 300;
+}
+
+.toolbar {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1rem 2rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.btn.primary {
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    border: none;
+}
+
+.btn.danger {
+    background: linear-gradient(45deg, #f44336, #da190b);
+    border: none;
+}
+
+.main-container {
+    flex: 1;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+}
+
+.sidebar {
+    width: 250px;
+    background: rgba(255, 255, 255, 0.05);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.sidebar h3 {
+    color: white;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.node-palette {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.palette-item {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 0.75rem;
+    border-radius: 6px;
+    cursor: grab;
+    text-align: center;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.palette-item:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.02);
+}
+
+.palette-item:active {
+    cursor: grabbing;
+}
+
+.canvas-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+.canvas {
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 20px 20px, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    position: relative;
+    cursor: move;
+}
+
+.flowchart-node {
+    position: absolute;
+    min-width: 120px;
+    min-height: 60px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    padding: 1rem;
+    cursor: move;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: 500;
+    color: #333;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+.flowchart-node:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.flowchart-node.selected {
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.3);
+}
+
+.flowchart-node.process {
+    border-radius: 8px;
+}
+
+.flowchart-node.decision {
+    border-radius: 50%;
+    min-width: 80px;
+    min-height: 80px;
+}
+
+.flowchart-node.start-end {
+    border-radius: 30px;
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    color: white;
+    border-color: #45a049;
+}
+
+/* Entity color styles */
+.flowchart-node.entity-administrativo {
+    background: #8B4513;
+    color: white;
+    border-color: #654321;
+}
+
+.flowchart-node.entity-tecnico {
+    background: #1E90FF;
+    color: white;
+    border-color: #0066CC;
+}
+
+.flowchart-node.entity-logistica {
+    background: #FFD700;
+    color: #333;
+    border-color: #DAA520;
+}
+
+/* Decision node connection points */
+.decision-point {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #667eea;
+    border: 2px solid white;
+    border-radius: 50%;
+    cursor: crosshair;
+    z-index: 10;
+}
+
+.connection-line {
+    position: absolute;
+    height: 2px;
+    background: #667eea;
+    transform-origin: left center;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.connection-point {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: #667eea;
+    border-radius: 50%;
+    cursor: crosshair;
+    z-index: 10;
+}
+
+.users-online {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    min-width: 200px;
+}
+
+.user-cursor {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    pointer-events: none;
+    z-index: 1000;
+    transition: all 0.1s ease;
+}
+
+.status-indicator {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+}
+
+.modal input {
+    width: 100%;
+    padding: 0.75rem;
+    margin: 1rem 0;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 200px;
+    }
+    
+    .toolbar {
+        padding: 0.5rem 1rem;
+    }
+    
+    .btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+}
