@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Firebase hosting placeholder directory (should not be deployed)
+y/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
